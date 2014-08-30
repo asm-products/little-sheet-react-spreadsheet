@@ -1,0 +1,5 @@
+main.js
+tests/bundle.js
+*.swo
+*.swp
+node_modules

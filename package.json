@@ -1,0 +1,24 @@
+{
+  "name": "react-microspreadsheet",
+  "version": "0.0.0",
+  "description": "",
+  "main": "main.js",
+  "dependencies": {
+    "formulajs": "~0.0.29"
+  },
+  "devDependencies": {
+    "coffee-script": "^1.8.0",
+    "coffeeify": "^0.7.0",
+    "browserify": "^5.11.0"
+  },
+  "scripts": {
+    "prepublish": "./node_modules/.bin/coffee -c main.coffee",
+    "test": "./node_modules/.bin/browserify -t coffeeify ./tests/tests.coffee > ./tests/bundle.js && python -m SimpleHTTPServer 4000"
+  },
+  "keywords": [
+    "spreadsheet",
+    "sheet"
+  ],
+  "author": "Giovanni T. Parra",
+  "license": "MIT"
+}
