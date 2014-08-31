@@ -1,4 +1,5 @@
 main.js
+react-microspreadsheet.css
 tests/bundle.js
 *.swo
 *.swp

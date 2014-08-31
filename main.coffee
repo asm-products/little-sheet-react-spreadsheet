@@ -1,9 +1,10 @@
 FORMULA = require 'formulajs'
-React = if not window.React then require 'react' else window.React
+React = if typeof window isnt 'undefined' and window.React then window.React else require 'react'
 
 {table, tbody, tr, td, div, span, input} = React.DOM
 
 Spreadsheet = React.createClass
+  displayName: 'ReactMicroSpreadsheet'
   getInitialState: ->
     cells: @props.cells
     shownValues: @props.cells
@@ -75,8 +76,11 @@ Spreadsheet = React.createClass
       return matrix
 
     # arithmetic (or number)
-    return eval expr.replace /(\w\d{1,2})/g, (coord) =>
-      @getShownValue @cellsIndex[coord]
+    try
+      return eval expr.replace /(\w\d{1,2})/g, (coord) =>
+        @getShownValue @cellsIndex[coord]
+    catch e
+      return '#VALUE'
 
   parseStr: (str) ->
     return 0 if not str.length
@@ -123,7 +127,7 @@ Spreadsheet = React.createClass
     (table className: 'microspreadsheet',
       (tbody {},
         (tr {},
-          (td {})
+          (td className: 'label')
           (td className: 'label',
             cell.key) for cell in @cellsCoords[0].cells
         )
@@ -140,6 +144,7 @@ Spreadsheet = React.createClass
     )
 
 Cell = React.createClass
+  displayName: 'ReactMicroSpreadsheetCell'
   getInitialState: ->
     editing: false
     value: @props.value
@@ -170,6 +175,7 @@ Cell = React.createClass
           onChange: @handleChange
           onKeyPress: @handleKeyPress
           value: @state.value
+          autoFocus: true
         ) if @state.editing
         (span
           onDoubleClick: @startEditing

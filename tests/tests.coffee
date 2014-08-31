@@ -47,6 +47,7 @@ describe 'basic', ->
       cells = [
         ['=A2','123']
         ['7','=B1+A2']
+        ['=2+B3','=1+2']
         ['=SUM(A1,A2)','=sUm(A1:B2)']
       ]
       React.renderComponent Spreadsheet(cells: cells), utils.testNode()
@@ -65,7 +66,8 @@ describe 'basic', ->
 
       expect(cells[1]).to.eql ['1', '7', '123']
       expect(cells[2]).to.eql ['2', '7', '130']
-      expect(cells[3]).to.eql ['3', '14', '267']
+      expect(cells[3]).to.eql ['3', '5', '3']
+      expect(cells[4]).to.eql ['4', '14', '267']
 
   describe 'dbclick, edit, blur', ->
     sheet = null

@@ -1,7 +1,7 @@
 {
   "name": "react-microspreadsheet",
-  "version": "0.0.0",
-  "description": "",
+  "version": "0.0.1",
+  "description": "A pluggable spreadsheet component.",
   "main": "main.js",
   "dependencies": {
     "formulajs": "~0.0.29"
@@ -9,10 +9,11 @@
   "devDependencies": {
     "coffee-script": "^1.8.0",
     "coffeeify": "^0.7.0",
-    "browserify": "^5.11.0"
+    "browserify": "^5.11.0",
+    "less": "^1.7.4"
   },
   "scripts": {
-    "prepublish": "./node_modules/.bin/coffee -c main.coffee",
+    "prepublish": "./node_modules/.bin/lessc --clean-css style.less react-microspreadsheet.css && ./node_modules/.bin/coffee -c main.coffee",
     "test": "./node_modules/.bin/browserify -t coffeeify ./tests/tests.coffee > ./tests/bundle.js && python -m SimpleHTTPServer 4000"
   },
   "keywords": [
