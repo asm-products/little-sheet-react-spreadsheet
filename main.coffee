@@ -1,5 +1,8 @@
 FORMULA = require 'formulajs'
-React = if typeof window isnt 'undefined' and window.React then window.React else require 'react'
+React = require 'react'
+
+if typeof window isnt 'undefined'
+  Mousetrap = require 'mousetrap'
 
 {table, tbody, tr, td, div, span, input} = React.DOM
 
@@ -115,6 +118,52 @@ Spreadsheet = React.createClass
   cellsCoords: null
   cellsIndex: null
 
+  componentDidMount: ->
+    Mousetrap.bind ['down', 'enter'], (e) =>
+      if @state.selected.length
+        e.preventDefault()
+        if @state.selected[0] < (@state.cells.length - 1)
+          @setState
+            selected: [@state.selected[0] + 1, @state.selected[1]]
+    Mousetrap.bind 'up', (e) =>
+      if @state.selected.length
+        e.preventDefault()
+        if @state.selected[0] > 0
+          @setState
+            selected: [@state.selected[0] - 1, @state.selected[1]]
+    Mousetrap.bind 'left', (e) =>
+      if @state.selected.length
+        e.preventDefault()
+        if @state.selected[1] > 0
+          @setState
+            selected: [@state.selected[0], @state.selected[1] - 1]
+    Mousetrap.bind 'right', (e) =>
+      if @state.selected.length
+        e.preventDefault()
+        if @state.selected[1] < (@state.cells[0].length - 1)
+          @setState
+            selected: [@state.selected[0], @state.selected[1] + 1]
+    Mousetrap.bind 'ctrl+down', (e) =>
+      if @state.selected.length
+        e.preventDefault()
+        @setState selected: [@state.cells.length - 1, @state.selected[1]]
+    Mousetrap.bind 'ctrl+up', (e) =>
+      if @state.selected.length
+        e.preventDefault()
+        @setState selected: [0, @state.selected[1]]
+    Mousetrap.bind 'ctrl+left', (e) =>
+      if @state.selected.length
+        e.preventDefault()
+        @setState selected: [@state.selected[0], 0]
+    Mousetrap.bind 'ctrl+right', (e) =>
+      if @state.selected.length
+        e.preventDefault()
+        @setState selected: [@state.selected[0], @state.cells[0].length - 1]
+    Mousetrap.bind 'del', (e) =>
+      if @state.selected.length
+        e.preventDefault()
+        @handleCellChange @state.selected[0], @state.selected[1], {target: {value: ''}}
+
   handleCellClick: (rowN, colN, e) ->
     e.preventDefault()
     @setState selected: [rowN, colN]
@@ -133,8 +182,10 @@ Spreadsheet = React.createClass
       (tbody {},
         (tr {},
           (td className: 'label')
-          (td className: 'label',
-            cell.key) for cell in @cellsCoords[0].cells
+          (td
+            className: 'label',
+            key: cell.key
+          , cell.key) for cell in @cellsCoords[0].cells
         )
         (tr key: row.key,
           (td {className: 'label'}, row.key)
@@ -162,6 +213,10 @@ Cell = React.createClass
     else if nextProps.selected != @props.selected then true
     else false
 
+  componentDidUpdate: (prevProps) ->
+    if @state.editing and not @props.selected
+      @stopEditing()
+
   handleChange: (e) ->
     @state.value = e.target.value
     @forceUpdate()
@@ -184,6 +239,8 @@ Cell = React.createClass
     ,
       (div {},
         (input
+          ref: 'input'
+          className: 'mousetrap'
           onBlur: @stopEditing
           onChange: @handleChange
           onKeyPress: @handleKeyPress
