@@ -6,6 +6,7 @@ React = if typeof window isnt 'undefined' and window.React then window.React els
 Spreadsheet = React.createClass
   displayName: 'ReactMicroSpreadsheet'
   getInitialState: ->
+    selected: []
     cells: @props.cells
     shownValues: @props.cells
 
@@ -114,6 +115,10 @@ Spreadsheet = React.createClass
   cellsCoords: null
   cellsIndex: null
 
+  handleCellClick: (rowN, colN, e) ->
+    e.preventDefault()
+    @setState selected: [rowN, colN]
+
   handleCellChange: (rowN, colN, e) ->
     cells = @state.cells
     cells[rowN][colN] = e.target.value
@@ -136,7 +141,9 @@ Spreadsheet = React.createClass
           (Cell
             value: cell.value
             show: @state.shownValues[i][j]
+            selected: (i == @state.selected[0] and j == @state.selected[1])
             key: cell.key
+            onClick: @handleCellClick.bind @, i, j
             onChange: @handleCellChange.bind @, i, j
           ) for cell, j in row.cells
         ) for row, i in @cellsCoords
@@ -152,13 +159,17 @@ Cell = React.createClass
   shouldComponentUpdate: (nextProps, nextState) ->
     if nextState.editing != @state.editing then true
     else if nextProps.show != @props.show then true
+    else if nextProps.selected != @props.selected then true
     else false
 
   handleChange: (e) ->
     @state.value = e.target.value
     @forceUpdate()
 
-  startEditing: -> @setState editing: true
+  startEditing: (e) ->
+    e.preventDefault()
+    @setState editing: true
+
   stopEditing: ->
     @setState editing: false
     @props.onChange({target: {value: @state.value}})
@@ -168,7 +179,9 @@ Cell = React.createClass
       @stopEditing()
 
   render: ->
-    (td className: 'cell',
+    (td
+      className: 'cell ' + if @props.selected then 'selected' else ''
+    ,
       (div {},
         (input
           onBlur: @stopEditing
@@ -178,6 +191,7 @@ Cell = React.createClass
           autoFocus: true
         ) if @state.editing
         (span
+          onClick: @props.onClick
           onDoubleClick: @startEditing
         , @props.show) unless @state.editing
       )
