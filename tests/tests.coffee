@@ -156,3 +156,38 @@ describe 'basic', ->
       expect(cells[5]).to.eql ['5', '', '']
       expect(cells[6]).to.eql ['6', 'b', 'c']
       
+  describe 'click to add reference', ->
+    sheet = null
+    secondCell = null
+    input = null
+
+    before ->
+      cells = [
+        ['5','2']
+        ['7','9']
+      ]
+      sheet = React.renderComponent Spreadsheet(cells: cells), utils.testNode()
+    after utils.reset
+
+    it 'finds the second cell and starts editing', ->
+      secondCell = testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[1]
+      span = testUtils.findRenderedDOMComponentWithTag(secondCell, 'span')
+      testUtils.Simulate.doubleClick(span)
+
+    it 'adds a "="', ->
+      input = testUtils.findRenderedDOMComponentWithTag(secondCell, 'input')
+      testUtils.Simulate.change(input, {target: {value: '='}})
+      expect($('.microspreadsheet .cell input').val()).to.eql '='
+
+    it 'clicks on another cell and adds its reference to the input', ->
+      fourthCell = testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[3]
+      span = testUtils.findRenderedDOMComponentWithTag(fourthCell, 'span')
+      testUtils.Simulate.click(span)
+      expect($('.microspreadsheet .cell input').val()).to.eql '=B2'
+
+    it 'stops editing and the table recalculates', ->
+      testUtils.Simulate.blur(input)
+
+      expect($('.microspreadsheet .cell input').length).to.eql 0
+      expect($('.microspreadsheet .cell').eq(1).text()).to.eql '9'
+      expect($('.microspreadsheet .cell').eq(3).text()).to.eql '9'

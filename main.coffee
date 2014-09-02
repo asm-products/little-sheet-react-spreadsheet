@@ -5,6 +5,12 @@ mori = require 'mori'
 if typeof window isnt 'undefined'
   Mousetrap = require 'mousetrap'
 
+EventEmitter = require 'wolfy-eventemitter'
+
+class Dispatcher extends EventEmitter.EventEmitter
+  construct: ->
+
+dispatcher = new Dispatcher
 
 {table, tbody, tr, td, div, span, input} = React.DOM
 
@@ -168,7 +174,8 @@ Spreadsheet = React.createClass
         @handleCellChange @state.selected[0], @state.selected[1], {target: {value: ''}}
 
   handleCellClick: (rowN, colN, e) ->
-    e.preventDefault()
+    e.preventDefault() if e
+    dispatcher.emit 'cell-clicked', @cellsCoords[rowN].cells[colN].coord
     @setState selected: [rowN, colN]
 
   handleCellChange: (rowN, colN, e) ->
@@ -223,12 +230,19 @@ Cell = React.createClass
     if @state.editing and not @props.selected
       @stopEditing()
 
+  componentDidMount: ->
+    dispatcher.on 'cell-clicked', @handleCoordClicked
+
+  handleCoordClicked: (coord) ->
+    if @state.editing and @state.value[0] == '='
+      @setState value: @state.value + coord
+
   handleChange: (e) ->
     @state.value = e.target.value
     @forceUpdate()
 
   startEditing: (e) ->
-    e.preventDefault()
+    e.preventDefault() if e
     @props.onClick e
     @setState
       editing: true
