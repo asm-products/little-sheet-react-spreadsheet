@@ -1,4 +1,5 @@
 main.js
+npm-debug.log
 react-microspreadsheet.css
 tests/bundle.js
 *.swo

@@ -3,18 +3,31 @@
 <head>
   <meta charset="utf-8">
   <title>Mocha Tests</title>
-  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/mocha/1.21.4/mocha.css" />
+  <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
 </head>
 <body>
   <div id="mocha"></div>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/chai/1.9.1/chai.js"></script>
-  <script src="//cdnjs.cloudflare.com/ajax/libs/mocha/1.21.4/mocha.js"></script>
+  <script src="../node_modules/jquery/dist/jquery.js"></script>
+  <script src="../node_modules/chai/chai.js"></script>
+  <script src="../node_modules/mocha/mocha.js"></script>
   <script>mocha.setup('bdd')</script>
+  <script>mocha.reporter('html')</script>
+  <script>
+    Function.prototype.bind = Function.prototype.bind || function (thisp) {
+      var fn = this;
+      return function () {
+        return fn.apply(thisp, arguments);
+      };
+    };
+  </script>
   <script src="bundle.js"></script>
   <script>
-    mocha.checkLeaks();
-    mocha.run();
+    if (window.mochaPhantomJS) {
+      mochaPhantomJS.run()
+    }
+    else {
+      mocha.run()
+    }
   </script>
 </body>
 </html>
