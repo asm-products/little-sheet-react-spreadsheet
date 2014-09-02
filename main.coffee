@@ -1,8 +1,10 @@
 FORMULA = require 'formulajs'
 React = require 'react'
+mori = require 'mori'
 
 if typeof window isnt 'undefined'
   Mousetrap = require 'mousetrap'
+
 
 {table, tbody, tr, td, div, span, input} = React.DOM
 
@@ -10,26 +12,27 @@ Spreadsheet = React.createClass
   displayName: 'ReactMicroSpreadsheet'
   getInitialState: ->
     selected: []
-    cells: @props.cells
-    shownValues: @props.cells
+    cells: mori.js_to_clj @props.cells
+    shownValues: mori.js_to_clj @props.cells
 
   componentWillMount: ->
     @calcCellsCoords()
     @recalc()
 
-  componentWillReceiveProps: ->
-    @calcCellsCoords()
-    @recalc()
+  componentWillReceiveProps: (nextProps) ->
+    cells = mori.js_to_clj nextProps.cells
+    unless mori.equals cells, mori.js_to_clj(@props.cells)
+      @state.cells = cells
+      @calcCellsCoords()
+      @recalc()
 
   recalc: ->
     shownValues = []
     for row in @cellsCoords
       rowArray = []
-
       for cell in row.cells
         shownValue = if cell.value.length then @getShownValue cell.value else ''
         rowArray.push shownValue
-
       shownValues.push rowArray
     @setState shownValues: shownValues
 
@@ -74,7 +77,7 @@ Spreadsheet = React.createClass
       for i in [rowStart..rowEnd]
         rowArray = []
         for j in [colStart..colEnd]
-          rowArray.push @getShownValue @state.cells[i][j]
+          rowArray.push @getShownValue mori.get_in(@state.cells, [i, j])
         matrix.push rowArray
 
       return matrix
@@ -101,7 +104,7 @@ Spreadsheet = React.createClass
     @cellsIndex = {}
 
     number = 1
-    for row in @state.cells
+    for row in mori.clj_to_js @state.cells
       rowArray = []
 
       letter = 0
@@ -122,7 +125,7 @@ Spreadsheet = React.createClass
     Mousetrap.bind ['down', 'enter'], (e) =>
       if @state.selected.length
         e.preventDefault()
-        if @state.selected[0] < (@state.cells.length - 1)
+        if @state.selected[0] < (mori.count(@state.cells) - 1)
           @setState
             selected: [@state.selected[0] + 1, @state.selected[1]]
     Mousetrap.bind 'up', (e) =>
@@ -140,13 +143,13 @@ Spreadsheet = React.createClass
     Mousetrap.bind 'right', (e) =>
       if @state.selected.length
         e.preventDefault()
-        if @state.selected[1] < (@state.cells[0].length - 1)
+        if @state.selected[1] < (mori.count(mori.nth(@state.cells, 0)) - 1)
           @setState
             selected: [@state.selected[0], @state.selected[1] + 1]
     Mousetrap.bind 'ctrl+down', (e) =>
       if @state.selected.length
         e.preventDefault()
-        @setState selected: [@state.cells.length - 1, @state.selected[1]]
+        @setState selected: [mori.count(@state.cells) - 1, @state.selected[1]]
     Mousetrap.bind 'ctrl+up', (e) =>
       if @state.selected.length
         e.preventDefault()
@@ -158,7 +161,7 @@ Spreadsheet = React.createClass
     Mousetrap.bind 'ctrl+right', (e) =>
       if @state.selected.length
         e.preventDefault()
-        @setState selected: [@state.selected[0], @state.cells[0].length - 1]
+        @setState selected: [@state.selected[0], mori.count(mori.nth(@state.cells, 0)) - 1]
     Mousetrap.bind 'del', (e) =>
       if @state.selected.length
         e.preventDefault()
@@ -169,13 +172,12 @@ Spreadsheet = React.createClass
     @setState selected: [rowN, colN]
 
   handleCellChange: (rowN, colN, e) ->
-    cells = @state.cells
-    cells[rowN][colN] = e.target.value
     @setState
-      cells: cells
+      cells: mori.update_in @state.cells, [rowN, colN], mori.constantly e.target.value
     , ->
       @calcCellsCoords()
       @recalc()
+      @props.onChange mori.clj_to_js(@state.cells) if @props.onChange
 
   render: ->
     (table className: 'microspreadsheet',
@@ -207,6 +209,10 @@ Cell = React.createClass
     editing: false
     value: @props.value
 
+  componentWillReceiveProps: (nextProps) ->
+    if nextProps.value != @props.value
+      @setState value: nextProps.value
+
   shouldComponentUpdate: (nextProps, nextState) ->
     if nextState.editing != @state.editing then true
     else if nextProps.show != @props.show then true
@@ -223,7 +229,9 @@ Cell = React.createClass
 
   startEditing: (e) ->
     e.preventDefault()
-    @setState editing: true
+    @props.onClick e
+    @setState
+      editing: true
 
   stopEditing: ->
     @setState editing: false

@@ -5,7 +5,11 @@
   "main": "main.js",
   "dependencies": {
     "formulajs": "~0.0.29",
-    "mousetrap": "0.0.1"
+    "mousetrap": "*",
+    "mori": ">=0.2.x"
+  },
+  "peerDependencies": {
+    "react": "*"
   },
   "devDependencies": {
     "coffee-script": "^1.8.0",
