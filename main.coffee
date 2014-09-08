@@ -1,34 +1,69 @@
 FORMULA = require 'formulajs'
 React = require 'react'
+I = require 'immutable'
+M = require 'morearty'
 mori = require 'mori'
 
 if typeof window isnt 'undefined'
   Mousetrap = require 'mousetrap'
 
-
 {table, tbody, tr, td, div, span, input} = React.DOM
 
-Spreadsheet = React.createClass
+CTX = M.createContext React, I,
+  cells: I.Vector(
+    I.Vector(
+      I.Map({'in': '', 'out': ''})
+      I.Map({'in': '', 'out': ''})
+      I.Map({'in': '', 'out': ''})
+    )
+    I.Vector(
+      I.Map({'in': '', 'out': ''})
+      I.Map({'in': '', 'out': ''})
+      I.Map({'in': '', 'out': ''})
+    )
+    I.Vector(
+      I.Map({'in': '', 'out': ''})
+      I.Map({'in': '', 'out': ''})
+      I.Map({'in': '', 'out': ''})
+    )
+  )
+  selected: null
+  editing: null
+
+ReactMicroSpreadsheet = React.createClass
   displayName: 'ReactMicroSpreadsheet'
-  getInitialState: ->
-    selected: []
-    cells: mori.js_to_clj @props.cells
-    shownValues: mori.js_to_clj @props.cells
+  componentWillMount: ->
+    CTX.init()
+  render: ->
+    React.withContext {morearty: CTX}, ->
+      (Spreadsheet
+        binding: CTX.getBinding()
+      )
+
+Spreadsheet = React.createClass
+  displayName: 'Spreadsheet'
+  mixins: [Morearty.Mixin]
 
   componentWillMount: ->
-    @calcCellsCoords()
     @recalc()
 
-  componentWillReceiveProps: (nextProps) ->
-    cells = mori.js_to_clj nextProps.cells
-    unless mori.equals cells, mori.js_to_clj(@props.cells)
-      @state.cells = cells
-      @calcCellsCoords()
-      @recalc()
-
   recalc: ->
-    shownValues = []
-    for row in @cellsCoords
+    binding = @getDefaultBinding()
+
+    # clear all output values
+    binding.
+      
+
+    for row in [0..binding.val('cells').length]
+      for col in [0..binding.val(['cells', 0]).length]
+        input = binding.getIn ['cells', row, col, 'in']
+          
+        binding.updateIn ['cells', row, col]
+
+    @getDefaultBinding.val('cells').forEach (row) =>
+      row.forEach (cell) =>
+         = if cell.get('in')
+
       rowArray = []
       for cell in row.cells
         shownValue = if cell.value.length then @getShownValue cell.value else ''
@@ -180,6 +215,9 @@ Spreadsheet = React.createClass
       @props.onChange mori.clj_to_js(@state.cells) if @props.onChange
 
   render: ->
+    binding = @getDefaultBinding()
+    cellsBinding = binding.sub('cells')
+
     (table className: 'microspreadsheet',
       (tbody {},
         (tr {},
@@ -192,12 +230,8 @@ Spreadsheet = React.createClass
         (tr key: row.key,
           (td {className: 'label'}, row.key)
           (Cell
-            value: cell.value
-            show: @state.shownValues[i][j]
-            selected: (i == @state.selected[0] and j == @state.selected[1])
-            key: cell.key
-            onClick: @handleCellClick.bind @, i, j
-            onChange: @handleCellChange.bind @, i, j
+            binding: cellsBinding.sub([i, j])
+            key: j
           ) for cell, j in row.cells
         ) for row, i in @cellsCoords
       )
@@ -205,21 +239,23 @@ Spreadsheet = React.createClass
 
 Cell = React.createClass
   displayName: 'ReactMicroSpreadsheetCell'
-  getInitialState: ->
-    editing: false
-    value: @props.value
+
+  focus: ->
+    node = @refs.input.getDOMNode()
+    node.focus()
+    node.setSelectionRange node.value.length, node.value.length
+
+  componentDidMount: ->
+    @focus()
 
   componentWillReceiveProps: (nextProps) ->
     if nextProps.value != @props.value
       @setState value: nextProps.value
 
-  shouldComponentUpdate: (nextProps, nextState) ->
-    if nextState.editing != @state.editing then true
-    else if nextProps.show != @props.show then true
-    else if nextProps.selected != @props.selected then true
-    else false
-
-  componentDidUpdate: (prevProps) ->
+  componentDidUpdate: ->
+    ctx = @getMoreartyContext()
+    if ctx.isChanged @getDefaultBinding().sub('editing')
+      @focus()
     if @state.editing and not @props.selected
       @stopEditing()
 
@@ -253,7 +289,6 @@ Cell = React.createClass
           onChange: @handleChange
           onKeyPress: @handleKeyPress
           value: @state.value
-          autoFocus: true
         ) if @state.editing
         (span
           onClick: @props.onClick
