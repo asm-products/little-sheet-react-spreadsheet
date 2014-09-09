@@ -3,7 +3,7 @@ testUtils = React.addons.TestUtils
 expect = chai.expect
 should = chai.should()
 
-Spreadsheet = require '../main.coffee'
+Spreadsheet = require '../src/Spreadsheet.coffee'
 
 utils =
   reset: ->
@@ -17,6 +17,7 @@ utils =
     return testNode[0]
 
 describe 'basic', ->
+  this.timeout 50000
   describe 'text cells', ->
     before ->
       cells = [
