@@ -1,3 +1,4 @@
+Mousetrap = require 'mousetrap'
 React = require 'react/addons'
 testUtils = React.addons.TestUtils
 expect = chai.expect
@@ -197,9 +198,95 @@ describe 'basic', ->
       done()
 
     it 'recalculates when enter is pressed', (done) ->
-      Mousetrap.trigger('enter')
+      Mousetrap.trigger(['down', 'enter'])
 
       expect($('.microspreadsheet .cell input').length).to.eql 0
       expect($('.microspreadsheet .cell').eq(1).text()).to.eql '9'
       expect($('.microspreadsheet .cell').eq(3).text()).to.eql '9'
+      done()
+
+  describe 'movement and keyboard shortcuts', ->
+    before (done) ->
+      cells = [
+        ['5','2']
+        ['7','9']
+      ]
+      React.renderComponent Spreadsheet(cells: cells), utils.testNode(), done
+    after utils.reset
+
+    it 'starts at the first cell', (done) ->
+      expect($('.microspreadsheet .cell').eq(0).hasClass('selected')).to.eql true
+      done()
+
+    it 'goes right', (done) ->
+      Mousetrap.trigger('right')
+      expect($('.microspreadsheet .cell').eq(1).hasClass('selected')).to.eql true
+      done()
+
+    it 'deletes the content inside', (done) ->
+      Mousetrap.trigger('del')
+      expect($('.microspreadsheet .cell span').eq(1).text()).to.eql ''
+      done()
+
+    it 'does not go up', (done) ->
+      Mousetrap.trigger('up')
+      expect($('.microspreadsheet .cell').eq(1).hasClass('selected')).to.eql true
+      done()
+      
+    it 'goes down', (done) ->
+      Mousetrap.trigger(['down', 'enter'])
+      expect($('.microspreadsheet .cell').eq(3).hasClass('selected')).to.eql true
+      done()
+
+    it 'starts editing with a keypress (also replacing the text field with the corresponding char)', (done) ->
+      e = $.Event 'keydown'
+      e.which = 81
+      $('.microspreadsheet .cell span').eq(3).trigger(e)
+
+      expect($('.microspreadsheet .cell').eq(3).hasClass('selected')).to.eql true
+      expect($('.microspreadsheet .cell input').length).to.eql 1
+      expect($('.microspreadsheet .cell input').val()).to.eql 'q'
+      done()
+
+    it 'cancels the edit', (done) ->
+      Mousetrap.trigger('esc')
+      expect($('.microspreadsheet .cell span').text()).to.eql '9'
+      done()
+
+  describe 'undo, redo', ->
+    before (done) ->
+      cells = [
+        ['a', 'b']
+        ['c', 'd']
+      ]
+      React.renderComponent Spreadsheet(cells: cells), utils.testNode(), done
+    after utils.reset
+
+    it 'starts editing with a keypress (also replacing the text field with the corresponding char)', (done) ->
+      e = $.Event 'keydown'
+      e.which = 81 # q
+      $('.microspreadsheet .cell span').eq(0).trigger(e)
+
+      expect($('.microspreadsheet .cell input').val()).to.eql 'q'
+      done()
+
+    it 'saves the edit', (done) ->
+      e = $.Event 'keydown'
+      e.which = 13 # enter
+      $('.microspreadsheet .cell input').eq(0).trigger(e)
+
+      expect($('.microspreadsheet .cell span').length).to.eql 4
+      expect($('.microspreadsheet .cell span').eq(0)).to.eql 'q'
+      done()
+
+    it 'undoes the edit', (done) ->
+      Mousetrap.trigger('ctrl+z')
+    
+      expect($('.microspreadsheet .cell span').eq(0)).to.eql 'a'
+      done()
+
+    it 'redoes the edit', (done) ->
+      Mousetrap.trigger(['ctrl+y', 'ctrl+r'])
+
+      expect($('.microspreadsheet .cell span').eq(0)).to.eql 'q'
       done()

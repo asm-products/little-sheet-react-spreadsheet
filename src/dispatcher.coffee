@@ -31,9 +31,14 @@ class Dispatcher extends EventEmitter.EventEmitter
       'del': 'del'
       'esc': 'esc'
 
-    for event, shortcut of shortcuts
-      Mousetrap.bind shortcut, (e) ->
-        @emit event, e
+    for eventChannel, shortcut of shortcuts
+      (=>
+        channel = eventChannel
+        Mousetrap.bind shortcut, (e) =>
+          @emit channel, e
+      )()
 
 dispatcher = new Dispatcher
+dispatcher.initKeyboardShortcuts()
+
 module.exports = dispatcher
