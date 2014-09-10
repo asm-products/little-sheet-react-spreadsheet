@@ -10,7 +10,7 @@ class Dispatcher extends EventEmitter.EventEmitter
     @emit 'replace-cells', cellsArray
 
   handleCellDoubleClicked: (coord) ->
-    @emit 'cell-doucleClicked', coord # coord should be an array like [rowNumber, colNumber]
+    @emit 'cell-doubleClicked', coord # coord should be an array like [rowNumber, colNumber]
 
   handleCellClicked: (coord) ->
     @emit 'cell-clicked', coord

@@ -62,7 +62,7 @@ store.registerCallback 'cell-clicked', (coord) ->
     if valueBeingEdited[0] == '='
       # clicked on a reference
       addr = utils.getAddressFromCoord coord # address is in the format 'A1'
-      store.cells = mori.assoc_in(
+      store.cells = mori.update_in(
         store.cells
         store.editingCoord.concat 'raw'
         (val) -> val + addr
@@ -81,31 +81,33 @@ store.registerCallback 'cell-doubleClicked', (coord) ->
   store.changed()
 
 selectCell = (newCoord) ->
-  store.cells = mori.assoc_in(
-    store.cells
-    store.selectedCoord.concat 'selected',
-    true
-  )
+  if store.selectedCoord
+    store.cells = mori.assoc_in(
+      store.cells
+      store.selectedCoord.concat 'selected'
+      false
+    )
   store.selectedCoord = newCoord
   if newCoord
     store.cells = mori.assoc_in(
       store.cells
-      newCoord.concat 'selected',
-      mori.constantly false
+      newCoord.concat 'selected'
+      true
     )
 
 editCell = (newCoord) ->
-  store.cells = mori.assoc_in(
-    store.cells
-    store.selectedCoord.concat 'editing',
-    mori.constantly false
-  )
+  if store.editingCoord
+    store.cells = mori.assoc_in(
+      store.cells
+      store.editingCoord.concat 'editing'
+      false
+    )
   store.editingCoord = newCoord
   if newCoord
     store.cells = mori.assoc_in(
       store.cells
-      newCoord.concat 'editing',
-      mori.constantly true
+      newCoord.concat 'editing'
+      true
     )
 
 recalc = (->
@@ -123,9 +125,7 @@ recalc = (->
       return getCalcResult raw
 
   getCalcResult = (raw) ->
-    if not raw
-      return ''
-    else if raw[0] == '='
+    if raw[0] == '='
       return calc raw
     else
       return parseStr raw
@@ -196,8 +196,8 @@ recalc = (->
       for j in [0..(mori.count(mori.get(store.cells, 0))-1)]
         addr = utils.getAddressFromCoord([i, j])
         raw = mori.get_in(store.cells, [i, j, 'raw'])
-        calcRes = getCalcResult(raw)
-        calculated[addr] = calcRes
+        calcRes = if raw[0] == '=' then getCalcResult(raw) else raw
+        calculated[addr] = calcRes if typeof calcRes == 'number'
         store.cells = mori.assoc_in(store.cells, [i, j, 'calc'], calcRes)
   )()
 

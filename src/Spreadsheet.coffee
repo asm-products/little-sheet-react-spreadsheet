@@ -13,18 +13,22 @@ Spreadsheet = React.createClass
   getInitialState: ->
     cells: cellStore.cells
 
-  componentWillMount: ->
-    cellStore.on 'CHANGE', =>
-      @setState
-        cells: cellStore.cells
+  componentDidMount: ->
+    cellStore.on 'CHANGE', @updateCells
 
     # set cells values
     if @props.cells and @props.cells.length
       dispatcher.replaceCells @props.cells
 
+  updateCells: ->
+    @setState cells: cellStore.cells
+
   componentWillReceiveProps: (nextProps) ->
     if nextProps.cells and nextProps.cells.length
       dispatcher.replaceCells nextProps.cells
+
+  componentWillUnmount: ->
+    cellStore.off 'CHANGE', @updateCells
 
   render: ->
     (table className: 'microspreadsheet',

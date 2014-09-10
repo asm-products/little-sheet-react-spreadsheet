@@ -24,21 +24,20 @@ Cell = React.createClass
     (td
       className:
         'cell ' +
-        if mori.get('selected', @props.cell) then 'selected' else ''
+        if mori.get(@props.cell, 'selected') then 'selected' else ''
     ,
       (div {},
-        (input
+        if mori.get @props.cell, 'editing' then (input
           ref: 'input'
           className: 'mousetrap'
           onChange: @handleChange
           value: mori.get @props.cell, 'raw'
-        ) if mori.get 'editing', @props.cell
-        (span
+        ) else (span
           onClick: @handleClick
           onDoubleClick: @handleDoubleClick
         ,
           mori.get @props.cell, 'calc'
-        ) unless mori.get 'editing', @props.cell
+        )
       )
     )
 
