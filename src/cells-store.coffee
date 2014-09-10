@@ -152,6 +152,17 @@ store.registerCallback 'del', ->
     recalc()
     store.changed()
 
+store.registerCallback 'letter', (e) ->
+  if not store.editingCoord
+    # assign the letter to the cell and start editing it
+    store.cells = mori.assoc_in(
+      store.cells
+      store.selectedCoord.concat 'raw'
+      String.fromCharCode(e.keyCode or e.charCode)
+    )
+    editCell(store.selectedCoord)
+    store.changed()
+
 selectCell = (newCoord) ->
   if store.selectedCoord
     store.cells = mori.assoc_in(

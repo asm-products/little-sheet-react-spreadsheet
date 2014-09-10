@@ -198,7 +198,7 @@ describe 'basic', ->
       done()
 
     it 'recalculates when enter is pressed', (done) ->
-      Mousetrap.trigger(['down', 'enter'])
+      KeyEvent.simulate(0, 13)
 
       expect($('.microspreadsheet .cell input').length).to.eql 0
       expect($('.microspreadsheet .cell').eq(1).text()).to.eql '9'
@@ -219,12 +219,12 @@ describe 'basic', ->
       done()
 
     it 'goes right', (done) ->
-      Mousetrap.trigger('right')
+      KeyEvent.simulate(0, 39)
       expect($('.microspreadsheet .cell').eq(1).hasClass('selected')).to.eql true
       done()
 
     it 'deletes the content inside', (done) ->
-      Mousetrap.trigger('del')
+      KeyEvent.simulate(0, 46)
       expect($('.microspreadsheet .cell span').eq(1).text()).to.eql ''
       done()
 
@@ -234,14 +234,12 @@ describe 'basic', ->
       done()
       
     it 'goes down', (done) ->
-      Mousetrap.trigger(['down', 'enter'])
+      KeyEvent.simulate(0, 40)
       expect($('.microspreadsheet .cell').eq(3).hasClass('selected')).to.eql true
       done()
 
     it 'starts editing with a keypress (also replacing the text field with the corresponding char)', (done) ->
-      e = $.Event 'keydown'
-      e.which = 81
-      $('.microspreadsheet .cell span').eq(3).trigger(e)
+      KeyEvent.simulate(113, 113)
 
       expect($('.microspreadsheet .cell').eq(3).hasClass('selected')).to.eql true
       expect($('.microspreadsheet .cell input').length).to.eql 1
@@ -263,17 +261,13 @@ describe 'basic', ->
     after utils.reset
 
     it 'starts editing with a keypress (also replacing the text field with the corresponding char)', (done) ->
-      e = $.Event 'keydown'
-      e.which = 81 # q
-      $('.microspreadsheet .cell span').eq(0).trigger(e)
+      KeyEvent.simulate(81, 81)
 
-      expect($('.microspreadsheet .cell input').val()).to.eql 'q'
+      expect($('.microspreadsheet .cell input').val()).to.eql 'Q'
       done()
 
     it 'saves the edit', (done) ->
-      e = $.Event 'keydown'
-      e.which = 13 # enter
-      $('.microspreadsheet .cell input').eq(0).trigger(e)
+      KeyEvent.simulate(0, 13)
 
       expect($('.microspreadsheet .cell span').length).to.eql 4
       expect($('.microspreadsheet .cell span').eq(0)).to.eql 'q'
