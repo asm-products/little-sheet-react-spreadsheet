@@ -172,6 +172,10 @@ store.registerCallback 'del', ->
 
 store.registerCallback 'letter', (e) ->
   if not store.editingCoord
+    # does nothing when pressed with a meta key
+    if e.ctrlKey or e.shiftKey or e.metaKey or e.altKey
+      return
+
     # assign the letter to the cell and start editing it
     store.cells = mori.assoc_in(
       store.cells
@@ -188,7 +192,7 @@ store.registerCallback 'esc', ->
     store.undo()
     store.changed()
 
-store.registerCallback 'undo', ->
+store.registerCallback 'undo', (e) ->
   store.undo()
   store.changed()
 

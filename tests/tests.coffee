@@ -274,7 +274,7 @@ describe 'basic', ->
       done()
 
     it 'undoes the edit', (done) ->
-      Mousetrap.trigger('ctrl+z')
+      KeyEvent.simulate(90, 90, ['ctrl'])
     
       expect($('.microspreadsheet .cell span').eq(0).text()).to.eql 'a'
       done()
