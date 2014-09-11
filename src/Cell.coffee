@@ -9,16 +9,20 @@ Cell = React.createClass
   displayName: 'ReactMicroSpreadsheetCell'
 
   shouldComponentUpdate: (nextProps) ->
-    if mori.equals @props.cell, nextProps.cell
+    if mori.equals(@props.cell, nextProps.cell)
       return false
     else
       return true
 
+  wasEditing: false
   componentDidUpdate: ->
-    if @refs.input
+    if @refs.input and not @wasEditing
       node = @refs.input.getDOMNode()
       node.focus()
       node.setSelectionRange node.value.length, node.value.length
+      @wasEditing = true
+    if not @refs.input
+      @wasEditing = false
 
   render: ->
     (td
