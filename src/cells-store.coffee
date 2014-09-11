@@ -7,23 +7,28 @@ class RawStore extends Store
   # data
   cells: mori.js_to_clj [
     [
-      {raw: '', calc: '', editing: false, selected: true}
-      {raw: '', calc: '', editing: false, selected: false}
-      {raw: '', calc: '', editing: false, selected: false}
+      {raw: '', calc: ''}
+      {raw: '', calc: ''}
+      {raw: '', calc: ''}
     ]
     [
-      {raw: '', calc: '', editing: false, selected: false}
-      {raw: '', calc: '', editing: false, selected: false}
-      {raw: '', calc: '', editing: false, selected: false}
+      {raw: '', calc: ''}
+      {raw: '', calc: ''}
+      {raw: '', calc: ''}
     ]
     [
-      {raw: '', calc: '', editing: false, selected: false}
-      {raw: '', calc: '', editing: false, selected: false}
-      {raw: '', calc: '', editing: false, selected: false}
+      {raw: '', calc: ''}
+      {raw: '', calc: ''}
+      {raw: '', calc: ''}
     ]
   ]
   editingCoord: null
   selectedCoord: [0, 0]
+  getCells: ->
+    cells = mori.assoc_in @cells, @selectedCoord.concat('selected'), true
+    if @editingCoord
+      cells = mori.assoc_in cells, @editingCoord.concat('editing'), true
+    return cells
 
 store = new RawStore
 
@@ -31,14 +36,9 @@ store.registerCallback 'replace-cells', (cellsArray) ->
   newCells = mori.js_to_clj(
     (
       (
-        {raw: rawValue, calc: '', editing: false, selected: false}
+        {raw: rawValue, calc: ''}
       ) for rawValue in row
     ) for row in cellsArray
-  )
-  newCells = mori.assoc_in(
-    newCells
-    [0, 0, 'selected']
-    true
   )
 
   store.cells = newCells
@@ -57,7 +57,7 @@ store.registerCallback 'new-cell-value', (value) ->
 
 store.registerCallback 'cell-clicked', (coord) ->
   if not store.editingCoord
-    selectCell(coord)
+    store.selectedCoord = coord
     store.changed()
 
   else if store.editingCoord
@@ -76,69 +76,69 @@ store.registerCallback 'cell-clicked', (coord) ->
       )
     else
       # just blur
-      selectCell(coord)
-      editCell null
+      store.selectedCoord = coord
+      store.editingCoord = null
       recalc()
 
     store.changed()
 
 store.registerCallback 'cell-doubleClicked', (coord) ->
-  selectCell(coord)
-  editCell(coord)
+  store.selectedCoord = coord
+  store.editingCoord = coord
   store.changed()
 
 store.registerCallback 'down', ->
   if store.editingCoord
     # blur
-    editCell null
+    store.editingCoord = null
     recalc()
 
   # go one cell down
   if store.selectedCoord[0] < (mori.count(store.cells) - 1)
-    selectCell([store.selectedCoord[0] + 1, store.selectedCoord[1]])
+    store.selectedCoord = [store.selectedCoord[0] + 1, store.selectedCoord[1]]
   store.changed()
 
 store.registerCallback 'up', ->
   if store.editingCoord
     # blur
-    editCell null
+    store.editingCoord = null
     recalc()
 
   # go one cell up
   if store.selectedCoord[0] > 0
-    selectCell([store.selectedCoord[0] - 1, store.selectedCoord[1]])
+    store.selectedCoord = [store.selectedCoord[0] - 1, store.selectedCoord[1]]
   store.changed()
 
 store.registerCallback 'left', ->
   if not store.editingCoord
     if store.selectedCoord[1] > 0
-      selectCell([store.selectedCoord[0], store.selectedCoord[1] - 1])
+      store.selectedCoord = [store.selectedCoord[0], store.selectedCoord[1] - 1]
       store.changed()
 
 store.registerCallback 'right', ->
   if not store.editingCoord
     if store.selectedCoord[1] < (mori.count(mori.get(store.cells, 0)) - 1)
-      selectCell([store.selectedCoord[0], store.selectedCoord[1] + 1])
+      store.selectedCoord = [store.selectedCoord[0], store.selectedCoord[1] + 1]
       store.changed()
 
 store.registerCallback 'all-right', ->
   if not store.editingCoord
-    selectCell([store.selectedCoord[0], mori.count(mori.get(store.cells, 0)) - 1])
+    store.selectedCoord = [store.selectedCoord[0], mori.count(mori.get(store.cells, 0)) - 1]
     store.changed()
 
 store.registerCallback 'all-down', ->
   if not store.editingCoord
-    selectCell([mori.count(store.cells) - 1, store.selectedCoord[1]])
+    store.selectedCoord = [mori.count(store.cells) - 1, store.selectedCoord[1]]
     store.changed()
 
 store.registerCallback 'all-up', ->
   if not store.editingCoord
-    selectCell([0, store.selectedCoord[1]])
+    store.selectedCoord = [0, store.selectedCoord[1]]
     store.changed()
 
 store.registerCallback 'all-left', ->
   if not store.editingCoord
-    selectCell([store.selectedCoord[0], 0])
+    store.selectedCoord = [store.selectedCoord[0], 0]
     store.changed()
 
 store.registerCallback 'del', ->
@@ -160,38 +160,9 @@ store.registerCallback 'letter', (e) ->
       store.selectedCoord.concat 'raw'
       String.fromCharCode(e.keyCode or e.charCode)
     )
-    editCell(store.selectedCoord)
+    store.editingCoord = store.selectedCoord
     store.changed()
 
-selectCell = (newCoord) ->
-  if store.selectedCoord
-    store.cells = mori.assoc_in(
-      store.cells
-      store.selectedCoord.concat 'selected'
-      false
-    )
-  store.selectedCoord = newCoord
-  if newCoord
-    store.cells = mori.assoc_in(
-      store.cells
-      newCoord.concat 'selected'
-      true
-    )
-
-editCell = (newCoord) ->
-  if store.editingCoord
-    store.cells = mori.assoc_in(
-      store.cells
-      store.editingCoord.concat 'editing'
-      false
-    )
-  store.editingCoord = newCoord
-  if newCoord
-    store.cells = mori.assoc_in(
-      store.cells
-      newCoord.concat 'editing'
-      true
-    )
 
 recalc = (->
   calculated = {}

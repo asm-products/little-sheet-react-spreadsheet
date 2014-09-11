@@ -11,7 +11,7 @@ cellStore = require './cells-store.coffee'
 Spreadsheet = React.createClass
   displayName: 'ReactMicroSpreadsheet'
   getInitialState: ->
-    cells: cellStore.cells
+    cells: cellStore.getCells()
 
   componentDidMount: ->
     cellStore.on 'CHANGE', @updateCells
@@ -21,7 +21,7 @@ Spreadsheet = React.createClass
       dispatcher.replaceCells @props.cells
 
   updateCells: ->
-    @setState cells: cellStore.cells
+    @setState cells: cellStore.getCells()
 
   componentWillReceiveProps: (nextProps) ->
     if nextProps.cells and nextProps.cells.length
