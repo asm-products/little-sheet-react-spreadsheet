@@ -29,6 +29,24 @@ class RawStore extends Store
     if @editingCoord
       cells = mori.assoc_in cells, @editingCoord.concat('editing'), true
     return cells
+  undoStates: mori.list()
+  redoStates: mori.list()
+  canUndo: false
+  canRedo: false
+  redo: ->
+    if store.canRedo
+      store.undoStates = mori.conj store.undoStates, mori.first store.redoStates
+      store.cells = mori.first store.redoStates
+      store.redoStates = mori.drop 1, store.redoStates
+      store.canRedo = not mori.is_empty store.redoStates
+      store.canUndo = true
+  undo: ->
+    if store.canUndo
+      store.redoStates = mori.conj store.redoStates, mori.first this.undoStates
+      store.undoStates = mori.drop 1, store.undoStates
+      store.cells = mori.first store.undoStates
+      store.canUndo = not mori.is_empty store.undoStates
+      store.canRedo = true
 
 store = new RawStore
 
@@ -163,6 +181,20 @@ store.registerCallback 'letter', (e) ->
     store.editingCoord = store.selectedCoord
     store.changed()
 
+store.registerCallback 'esc', ->
+  if store.editingCoord
+    # stop editing, don't recalc and return to the previous version (undo)
+    store.editingCoord = null
+    store.undo()
+    store.changed()
+
+store.registerCallback 'undo', ->
+  store.undo()
+  store.changed()
+
+store.registerCallback 'redo', ->
+  store.redo()
+  store.changed()
 
 recalc = (->
   calculated = {}
@@ -253,6 +285,13 @@ recalc = (->
         calcRes = if raw[0] == '=' then getCalcResult(raw) else raw
         calculated[addr] = calcRes if typeof calcRes == 'number'
         store.cells = mori.assoc_in(store.cells, [i, j, 'calc'], calcRes)
+
+    # after the recalc is done, save state
+    store.redoStates = mori.list()
+    store.undoStates = mori.conj store.undoStates, store.cells
+    store.canUndo = true
+    store.canRedo = false
+
   )()
 
 module.exports = store

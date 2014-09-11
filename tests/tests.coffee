@@ -248,7 +248,7 @@ describe 'basic', ->
 
     it 'cancels the edit', (done) ->
       Mousetrap.trigger('esc')
-      expect($('.microspreadsheet .cell span').text()).to.eql '9'
+      expect($('.microspreadsheet .cell').eq(3).text()).to.eql '9'
       done()
 
   describe 'undo, redo', ->
@@ -270,17 +270,17 @@ describe 'basic', ->
       KeyEvent.simulate(0, 13)
 
       expect($('.microspreadsheet .cell span').length).to.eql 4
-      expect($('.microspreadsheet .cell span').eq(0)).to.eql 'q'
+      expect($('.microspreadsheet .cell span').eq(0).text()).to.eql 'Q'
       done()
 
     it 'undoes the edit', (done) ->
       Mousetrap.trigger('ctrl+z')
     
-      expect($('.microspreadsheet .cell span').eq(0)).to.eql 'a'
+      expect($('.microspreadsheet .cell span').eq(0).text()).to.eql 'a'
       done()
 
     it 'redoes the edit', (done) ->
       Mousetrap.trigger(['ctrl+y', 'ctrl+r'])
 
-      expect($('.microspreadsheet .cell span').eq(0)).to.eql 'q'
+      expect($('.microspreadsheet .cell span').eq(0).text()).to.eql 'Q'
       done()
