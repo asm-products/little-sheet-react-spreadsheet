@@ -21,7 +21,17 @@ Spreadsheet = React.createClass
       dispatcher.replaceCells @props.cells
 
   updateCells: ->
-    @setState cells: cellStore.getCells()
+    newCells = cellStore.getCells()
+    @setState cells: newCells
+
+    array = []
+    for r in mori.clj_to_js(newCells)
+      row = []
+      for c in r
+        row.push c.raw
+      array.push row
+
+    @props.onChange (c.raw for c in r for r in mori.clj_to_js newCells) if @props.onChange
 
   componentWillReceiveProps: (nextProps) ->
     if nextProps.cells and nextProps.cells.length
