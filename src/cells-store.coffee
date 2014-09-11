@@ -246,7 +246,7 @@ recalc = (->
     expr = expr.trim()
 
     # cell
-    if /^\w\d{1,2}$/.exec expr
+    if /^[A-Z]\d{1,2}$/.exec expr
       return getCalcResultAt expr
 
     # list of cells
@@ -255,7 +255,7 @@ recalc = (->
       return [getArgValue cell for cell in cells]
 
     # matrix
-    if /^\w\d{1,2}:\w\d{1,2}$/.exec expr
+    if /^[A-Z]\d{1,2}:[A-Z]\d{1,2}$/.exec expr
       refs = expr.split(':')
       colStart = refs[0][0].toUpperCase().charCodeAt(0) - 65 # A turns into 0
       colEnd   = refs[1][0].toUpperCase().charCodeAt(0) - 65
@@ -274,7 +274,7 @@ recalc = (->
 
     # arithmetic (or number)
     try
-      return eval expr.replace /(\w\d{1,2})/g, (addr) =>
+      return eval expr.replace /([A-Z]\d{1,2})/g, (addr) ->
         getCalcResultAt(addr) or 0
     catch e
       return '#VALUE'
