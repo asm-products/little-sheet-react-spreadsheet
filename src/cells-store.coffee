@@ -172,8 +172,8 @@ store.registerCallback 'del', ->
 
 store.registerCallback 'letter', (e) ->
   if not store.editingCoord
-    # does nothing when pressed with a meta key
-    if e.ctrlKey or e.shiftKey or e.metaKey or e.altKey
+    # does nothing when pressed with a meta key (except shift)
+    if e.ctrlKey or e.metaKey or e.altKey
       return
 
     # assign the letter to the cell and start editing it
@@ -182,6 +182,8 @@ store.registerCallback 'letter', (e) ->
       store.selectedCoord.concat 'raw'
       String.fromCharCode(e.keyCode or e.charCode)
     )
+    e.preventDefault()
+    e.stopPropagation()
     store.editingCoord = store.selectedCoord
     store.changed()
 
