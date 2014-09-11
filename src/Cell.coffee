@@ -3,7 +3,7 @@ mori = require 'mori'
 
 {table, tbody, tr, td, div, span, input} = React.DOM
 
-dispatcher = require './dispatcher.coffee'
+dispatcher = require './dispatcher'
 
 Cell = React.createClass
   displayName: 'ReactMicroSpreadsheetCell'

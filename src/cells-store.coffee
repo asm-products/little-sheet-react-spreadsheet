@@ -1,7 +1,7 @@
 FORMULA = require 'formulajs'
-Store = require './base-store.coffee'
+Store = require './base-store'
 mori = require 'mori'
-utils = require './utils.coffee'
+utils = require './utils'
 
 class RawStore extends Store
   # data

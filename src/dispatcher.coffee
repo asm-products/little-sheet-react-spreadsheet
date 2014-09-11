@@ -2,8 +2,10 @@ if typeof window isnt 'undefined'
   Mousetrap = require 'mousetrap'
 
 EventEmitter = require 'wolfy-eventemitter'
+if EventEmitter.EventEmitter
+  EventEmitter = EventEmitter.EventEmitter
 
-class Dispatcher extends EventEmitter.EventEmitter
+class Dispatcher extends EventEmitter
   construct: ->
 
   replaceCells: (cellsArray) ->
@@ -42,6 +44,7 @@ class Dispatcher extends EventEmitter.EventEmitter
       )()
 
 dispatcher = new Dispatcher
-dispatcher.initKeyboardShortcuts()
+if typeof window isnt 'undefined'
+  dispatcher.initKeyboardShortcuts()
 
 module.exports = dispatcher

@@ -1,8 +1,10 @@
 EventEmitter = require 'wolfy-eventemitter'
+if EventEmitter.EventEmitter
+  EventEmitter = EventEmitter.EventEmitter
 
-dispatcher = require './dispatcher.coffee'
+dispatcher = require './dispatcher'
 
-class Store extends EventEmitter.EventEmitter
+class Store extends EventEmitter
   construct: ->
 
   # register callback to dispatcher

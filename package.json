@@ -1,12 +1,15 @@
 {
   "name": "react-microspreadsheet",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "A pluggable spreadsheet component.",
-  "main": "src/Spreadsheet.coffee",
+  "main": "lib/Spreadsheet.js",
   "dependencies": {
     "formulajs": "*",
     "mousetrap": "*",
-    "mori": ">=0.2.x"
+    "mori": ">=0.2.x",
+    "coffee-loader": "^0.7.2",
+    "webpack": "^1.4.0-beta5",
+    "wolfy-eventemitter": "^0.1.0"
   },
   "peerDependencies": {
     "react": "*"
@@ -21,15 +24,14 @@
     "chai": "^1.9.1"
   },
   "scripts": {
-    "prepublish": "./node_modules/.bin/lessc --clean-css style.less react-microspreadsheet.css && ./node_modules/.bin/coffee -c main.coffee",
-    "test-phantom": "./node_modules/.bin/browserify -t coffeeify ./tests/tests.coffee > ./tests/bundle.js && mocha-phantomjs ./tests/index.html",
-    "test-browser": "./node_modules/.bin/browserify -t coffeeify ./tests/tests.coffee > ./tests/bundle.js && python -m SimpleHTTPServer 4000",
+    "prepublish": "./node_modules/.bin/lessc --clean-css style.less react-microspreadsheet.css && ./node_modules/.bin/coffee -c --bare --output lib/ src/",
+    "test-phantom": "webpack --entry ./tests/tests.coffee ./tests/tests.coffee ./tests/bundle.js && mocha-phantomjs ./tests/index.html",
+    "test-browser": "webpack --entry ./tests/tests.coffee ./tests/tests.coffee ./tests/bundle.js && python -m SimpleHTTPServer 4000",
     "test": "npm run test-phantom"
   },
   "keywords": [
     "react-component",
-    "spreadsheet",
-    "sheet"
+    "spreadsheet"
   ],
   "author": "Giovanni T. Parra",
   "license": "MIT"

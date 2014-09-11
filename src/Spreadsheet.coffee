@@ -2,11 +2,11 @@ React = require 'react'
 mori = require 'mori'
 
 {table, tbody, tr, td, div, span, input} = React.DOM
-Cell = require './Cell.coffee'
+Cell = require './Cell'
 
-utils = require './utils.coffee'
-dispatcher = require './dispatcher.coffee'
-cellStore = require './cells-store.coffee'
+utils = require './utils'
+dispatcher = require './dispatcher'
+cellStore = require './cells-store'
 
 Spreadsheet = React.createClass
   displayName: 'ReactMicroSpreadsheet'
