@@ -16,11 +16,16 @@ Cell = React.createClass
 
   wasEditing: false
   componentDidUpdate: ->
-    if @refs.input and not @wasEditing
+    if @refs.input
       node = @refs.input.getDOMNode()
-      node.focus()
-      node.setSelectionRange node.value.length, node.value.length
-      @wasEditing = true
+      caret = if @props.caretPosition is null then node.value.length else @props.caretPosition
+      if not @wasEditing
+        node.focus()
+        node.setSelectionRange caret, caret
+        @wasEditing = true
+      else if node != document.activeElement
+        node.focus()
+        node.setSelectionRange caret, caret
     if not @refs.input
       @wasEditing = false
 
@@ -35,6 +40,7 @@ Cell = React.createClass
           ref: 'input'
           className: 'mousetrap'
           onChange: @handleChange
+          onClick: @handleClickInput
           value: mori.get @props.cell, 'raw'
         ) else (span
           onClick: @handleClick
@@ -48,6 +54,9 @@ Cell = React.createClass
   handleChange: (e) ->
     e.preventDefault()
     dispatcher.handleCellEdited e.target.value
+
+  handleClickInput: (e) ->
+    dispatcher.handleCellInputClicked e.target
 
   handleClick: (e) ->
     e.preventDefault()

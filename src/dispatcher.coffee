@@ -20,6 +20,9 @@ class Dispatcher extends EventEmitter
   handleCellEdited: (value) ->
     @emit 'new-cell-value', value
 
+  handleCellInputClicked: (element) ->
+    @emit 'input-clicked', element
+
   initKeyboardShortcuts: ->
     shortcuts =
       'down': ['down', 'enter']
@@ -41,6 +44,7 @@ class Dispatcher extends EventEmitter
         channel = eventChannel
         Mousetrap.bind shortcut, (e, combo) =>
           @emit channel, e, combo
+        , 'keyup'
       )()
 
 dispatcher = new Dispatcher

@@ -190,18 +190,26 @@ describe 'basic', ->
       expect($('.microspreadsheet .cell input').val()).to.eql '='
       done()
 
-    it 'clicks on another cell and add its addr to the input', (done) ->
+    it 'clicks at other cell and add its addr to the input', (done) ->
       fourthCell = testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[3]
       span = testUtils.findRenderedDOMComponentWithTag(fourthCell, 'span')
       testUtils.Simulate.click(span)
       expect($('.microspreadsheet .cell input').val()).to.eql '=B2'
       done()
 
+    it 'clicks at another cell and replace the previous one', (done) ->
+      thirdCell = testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[2]
+      span = testUtils.findRenderedDOMComponentWithTag(thirdCell, 'span')
+      testUtils.Simulate.click(span)
+      expect($('.microspreadsheet .cell input').val()).to.eql '=A2'
+      done()
+
     it 'recalculates when enter is pressed', (done) ->
       KeyEvent.simulate(0, 13)
 
       expect($('.microspreadsheet .cell input').length).to.eql 0
-      expect($('.microspreadsheet .cell').eq(1).text()).to.eql '9'
+      expect($('.microspreadsheet .cell').eq(1).text()).to.eql '7'
+      expect($('.microspreadsheet .cell').eq(2).text()).to.eql '7'
       expect($('.microspreadsheet .cell').eq(3).text()).to.eql '9'
       done()
 

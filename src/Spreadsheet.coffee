@@ -22,7 +22,9 @@ Spreadsheet = React.createClass
 
   updateCells: ->
     newCells = cellStore.getCells()
-    @setState cells: newCells
+    @setState
+      cells: newCells
+      caretPosition: cellStore.caretPosition
 
     array = []
     for r in mori.clj_to_js(newCells)
@@ -58,6 +60,7 @@ Spreadsheet = React.createClass
             rowKey: i
             key: j
             cell: mori.get_in @state.cells, [i, j]
+            caretPosition: @state.caretPosition
           ) for j in [0..(mori.count(mori.get(@state.cells, 0))-1)]
         ) for i in [0..(mori.count(@state.cells)-1)]
       )

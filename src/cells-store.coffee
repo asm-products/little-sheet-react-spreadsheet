@@ -24,11 +24,13 @@ class RawStore extends Store
   ]
   editingCoord: null
   selectedCoord: [0, 0]
+
   getCells: ->
     cells = mori.assoc_in @cells, @selectedCoord.concat('selected'), true
     if @editingCoord
       cells = mori.assoc_in cells, @editingCoord.concat('editing'), true
     return cells
+
   undoStates: mori.list()
   redoStates: mori.list()
   canUndo: false
@@ -48,6 +50,8 @@ class RawStore extends Store
       store.canUndo = not mori.is_empty store.undoStates
       store.canRedo = true
 
+  caretPosition: null
+
 store = new RawStore
 
 store.registerCallback 'replace-cells', (cellsArray) ->
@@ -61,6 +65,7 @@ store.registerCallback 'replace-cells', (cellsArray) ->
 
   store.cells = newCells
   store.editingCoord = null
+  store.caretPosition = null
   store.selectedCoord = [0, 0]
   recalc()
   store.changed()
@@ -71,7 +76,11 @@ store.registerCallback 'new-cell-value', (value) ->
     store.editingCoord.concat 'raw'
     value
   )
+  store.caretPosition = null
   store.changed()
+
+store.registerCallback 'input-clicked', (element) ->
+  store.caretPosition = utils.getCaretPosition element
 
 store.registerCallback 'cell-clicked', (coord) ->
   if not store.editingCoord
@@ -90,12 +99,28 @@ store.registerCallback 'cell-clicked', (coord) ->
       store.cells = mori.update_in(
         store.cells
         store.editingCoord.concat 'raw'
-        (val) -> val + addr
+        (val) ->
+          caretPosition = if store.caretPosition is null then val.length else store.caretPosition
+          if caretPosition == 0
+            return val
+
+          left = val.substr 0, caretPosition
+          right = val.substr caretPosition
+
+          # clean near expression values
+          left = left.replace /([+-/:;.*(=])[^+-/:;.*(=]*$/, '$1'
+          right = right.replace /^[^+-/:;.*)]*([+-/:;.*)]|$)/, '$1'
+
+          # set caret position to just after the addr
+          store.caretPosition = (left + addr).length
+
+          return left + addr + right
       )
     else
       # just blur
       store.selectedCoord = coord
       store.editingCoord = null
+      store.caretPosition = null
       recalc()
 
     store.changed()
@@ -103,12 +128,14 @@ store.registerCallback 'cell-clicked', (coord) ->
 store.registerCallback 'cell-doubleClicked', (coord) ->
   store.selectedCoord = coord
   store.editingCoord = coord
+  store.caretPosition = null
   store.changed()
 
 store.registerCallback 'down', ->
   if store.editingCoord
     # blur
     store.editingCoord = null
+    store.caretPosition = null
     recalc()
 
   # go one cell down
@@ -120,6 +147,7 @@ store.registerCallback 'up', ->
   if store.editingCoord
     # blur
     store.editingCoord = null
+    store.caretPosition = null
     recalc()
 
   # go one cell up
@@ -127,17 +155,21 @@ store.registerCallback 'up', ->
     store.selectedCoord = [store.selectedCoord[0] - 1, store.selectedCoord[1]]
   store.changed()
 
-store.registerCallback 'left', ->
+store.registerCallback 'left', (e) ->
   if not store.editingCoord
     if store.selectedCoord[1] > 0
       store.selectedCoord = [store.selectedCoord[0], store.selectedCoord[1] - 1]
       store.changed()
+  else
+    store.caretPosition = utils.getCaretPosition e.target
 
-store.registerCallback 'right', ->
+store.registerCallback 'right', (e) ->
   if not store.editingCoord
     if store.selectedCoord[1] < (mori.count(mori.get(store.cells, 0)) - 1)
       store.selectedCoord = [store.selectedCoord[0], store.selectedCoord[1] + 1]
       store.changed()
+  else
+    store.caretPosition = utils.getCaretPosition e.target
 
 store.registerCallback 'all-right', ->
   if not store.editingCoord
@@ -185,12 +217,14 @@ store.registerCallback 'letter', (e) ->
     e.preventDefault()
     e.stopPropagation()
     store.editingCoord = store.selectedCoord
+    store.caretPosition = null
     store.changed()
 
 store.registerCallback 'esc', ->
   if store.editingCoord
     # stop editing, don't recalc and return to the previous version (undo)
     store.editingCoord = null
+    store.caretPosition = null
     store.undo()
     store.changed()
 
@@ -274,7 +308,7 @@ recalc = (->
 
     # arithmetic (or number)
     try
-      return eval expr.replace /([A-Z]\d{1,2})/g, (addr) ->
+      return eval expr.replace /(\b[A-Z]\d{1,2}\b)/g, (addr) ->
         getCalcResultAt(addr) or 0
     catch e
       return '#VALUE'
