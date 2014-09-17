@@ -17,11 +17,26 @@ class Dispatcher extends EventEmitter
   handleCellClicked: (coord) ->
     @emit 'cell-clicked', coord
 
+  handleCellMouseDown: (coord) ->
+    @emit 'cell-mousedown', coord
+
+  handleCellMouseUp: (coord) ->
+    @emit 'cell-mouseup', coord
+
+  handleCellMouseEnter: (coord) ->
+    @emit 'cell-mouseenter', coord
+
   handleCellEdited: (value) ->
     @emit 'new-cell-value', value
 
-  handleCellInputClicked: (element) ->
-    @emit 'input-clicked', element
+  handleCellInputClicked: (e) ->
+    @emit 'input-clicked', e.target
+
+  handleSheetClickedOut: (e) ->
+    @emit 'sheet-clicked-out', e
+
+  handleSheetMouseUpOut: (e) ->
+    @emit 'sheet-mouseup-out', e
 
   initKeyboardShortcuts: ->
     shortcuts =

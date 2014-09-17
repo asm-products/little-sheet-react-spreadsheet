@@ -31,9 +31,11 @@ Cell = React.createClass
 
   render: ->
     (td
-      className:
-        'cell ' +
+      className: "cell #{
         if mori.get(@props.cell, 'selected') then 'selected' else ''
+      } #{
+        if mori.get(@props.cell, 'multi') then 'multi-selected' else ''
+      }"
     ,
       (div {},
         if mori.get @props.cell, 'editing' then (input
@@ -45,6 +47,10 @@ Cell = React.createClass
         ) else (span
           onClick: @handleClick
           onDoubleClick: @handleDoubleClick
+          onMouseDown: @handleMouseDown
+          onMouseUp: @handleMouseUp
+          onMouseMove: @handleMouseMove
+          onMouseEnter: @handleMouseEnter
         ,
           mori.get @props.cell, 'calc'
         )
@@ -56,7 +62,7 @@ Cell = React.createClass
     dispatcher.handleCellEdited e.target.value
 
   handleClickInput: (e) ->
-    dispatcher.handleCellInputClicked e.target
+    dispatcher.handleCellInputClicked e
 
   handleClick: (e) ->
     e.preventDefault()
@@ -65,5 +71,20 @@ Cell = React.createClass
   handleDoubleClick: (e) ->
     e.preventDefault()
     dispatcher.handleCellDoubleClicked [@props.rowKey, @props.key]
+
+  handleMouseDown: (e) ->
+    e.preventDefault()
+    dispatcher.handleCellMouseDown [@props.rowKey, @props.key]
+
+  handleMouseUp: (e) ->
+    e.preventDefault()
+    dispatcher.handleCellMouseUp [@props.rowKey, @props.key]
+
+  handleMouseMove: (e) ->
+    e.preventDefault()
+
+  handleMouseEnter: (e) ->
+    e.preventDefault()
+    dispatcher.handleCellMouseEnter [@props.rowKey, @props.key]
 
 module.exports = Cell

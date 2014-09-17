@@ -20,6 +20,10 @@ Spreadsheet = React.createClass
     if @props.cells and @props.cells.length
       dispatcher.replaceCells @props.cells
 
+    # listener for blur
+    document.body.addEventListener 'mousedown', @handleClickOut
+    document.body.addEventListener 'mouseup', @handleMouseUpOut
+
   updateCells: ->
     newCells = cellStore.getCells()
     @setState
@@ -41,9 +45,13 @@ Spreadsheet = React.createClass
 
   componentWillUnmount: ->
     cellStore.off 'CHANGE', @updateCells
+    document.body.removeEventListener 'mousedown', @handleClickOut
+    document.body.removeEventListener 'mouseup', @handleMouseUpOut
 
   render: ->
-    (table className: 'microspreadsheet',
+    (table
+      className: 'microspreadsheet'
+    ,
       (tbody {},
         (tr {},
           (td className: 'label')
@@ -65,5 +73,13 @@ Spreadsheet = React.createClass
         ) for i in [0..(mori.count(@state.cells)-1)]
       )
     )
+
+  handleClickOut: (e) ->
+    if e.target != @getDOMNode()
+      dispatcher.handleSheetClickedOut e
+
+  handleMouseUpOut: (e) ->
+    if e.target != @getDOMNode()
+      dispatcher.handleSheetMouseUpOut e
 
 module.exports = Spreadsheet

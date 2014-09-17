@@ -237,7 +237,7 @@ describe 'basic', ->
       done()
 
     it 'does not go up', (done) ->
-      Mousetrap.trigger('up')
+      KeyEvent.simulate(0, 38)
       expect($('.microspreadsheet .cell').eq(1).hasClass('selected')).to.eql true
       done()
       
@@ -247,15 +247,15 @@ describe 'basic', ->
       done()
 
     it 'starts editing with a keypress (also replacing the text field with the corresponding char)', (done) ->
-      KeyEvent.simulate(113, 113)
+      KeyEvent.simulate(80, 80)
 
       expect($('.microspreadsheet .cell').eq(3).hasClass('selected')).to.eql true
-      expect($('.microspreadsheet .cell input').length).to.eql 1
-      expect($('.microspreadsheet .cell input').val()).to.eql 'q'
+      expect($('.microspreadsheet .cell input')).to.have.length 1
+      expect($('.microspreadsheet .cell input').val()).to.eql 'P'
       done()
 
     it 'cancels the edit', (done) ->
-      Mousetrap.trigger('esc')
+      KeyEvent.simulate(0, 27)
       expect($('.microspreadsheet .cell').eq(3).text()).to.eql '9'
       done()
 
@@ -291,4 +291,68 @@ describe 'basic', ->
       KeyEvent.simulate(89, 89, ['ctrl'])
 
       expect($('.microspreadsheet .cell span').eq(0).text()).to.eql 'Q'
+      done()
+
+  describe 'multi select', ->
+    sheet = null
+    before (done) ->
+      cells = [
+        ['', 'b']
+        ['a', '']
+        ['', '']
+        ['', '']
+      ]
+      sheet = React.renderComponent Spreadsheet(cells: cells), utils.testNode(), done
+    after utils.reset
+
+    it 'starts selecting', (done) ->
+      first = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[0], 'span')
+      testUtils.Simulate.mouseDown(first)
+
+      expect($('.microspreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql false
+      expect($('.microspreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql false
+      expect($('.microspreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql false
+      expect($('.microspreadsheet .cell').eq(3).hasClass('multi-selected')).to.eql false
+      done()
+
+    it 'moves transversally', (done) ->
+      first = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[0], 'span')
+      third = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[2], 'span')
+
+      testUtils.SimulateNative.mouseOut(first, {relatedTarget: $('.microspreadsheet .cell').eq(2)[0]})
+      testUtils.SimulateNative.mouseOver(third, {relatedTarget: $('.microspreadsheet .cell').eq(0)[0]})
+
+      expect($('.microspreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql true
+      expect($('.microspreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql true
+      expect($('.microspreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql true
+      expect($('.microspreadsheet .cell').eq(3).hasClass('multi-selected')).to.eql false
+      done()
+
+    it 'moves back and the selection adjusts', (done) ->
+      third = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[2], 'span')
+      second = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[1], 'span')
+
+      testUtils.SimulateNative.mouseOut(third, {relatedTarget: $('.microspreadsheet .cell').eq(1)[0]})
+      testUtils.SimulateNative.mouseOver(second, {relatedTarget: $('.microspreadsheet .cell').eq(2)[0]})
+
+      expect($('.microspreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql true
+      expect($('.microspreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql true
+      expect($('.microspreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql false
+      done()
+
+    it 'stops selecting and the selection continues', (done) ->
+      second = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[1], 'span')
+      testUtils.Simulate.mouseUp(second)
+
+      expect($('.microspreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql true
+      expect($('.microspreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql true
+      expect($('.microspreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql false
+      done()
+
+    it 'deletes everything under the selection', (done) ->
+      KeyEvent.simulate(0, 46)
+
+      expect($('.microspreadsheet .cell').eq(0).text()).to.eql ''
+      expect($('.microspreadsheet .cell').eq(1).text()).to.eql ''
+      expect($('.microspreadsheet .cell').eq(2).text()).to.eql 'a'
       done()

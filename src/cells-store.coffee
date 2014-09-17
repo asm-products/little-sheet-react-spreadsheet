@@ -22,13 +22,27 @@ class RawStore extends Store
       {raw: '', calc: ''}
     ]
   ]
-  editingCoord: null
   selectedCoord: [0, 0]
+  multi: []
+  selectingMulti: false
+  editingCoord: null
+  caretPosition: null
+
+  select: (coord) ->
+    @selectedCoord = coord
+    @multi = []
+  edit: (coord) ->
+    @editingCoord = coord
+    @selectingMulti = false
+    @multi = []
+    @caretPosition = null
 
   getCells: ->
     cells = mori.assoc_in @cells, @selectedCoord.concat('selected'), true
     if @editingCoord
       cells = mori.assoc_in cells, @editingCoord.concat('editing'), true
+    for coord in @multi
+      cells = mori.assoc_in cells, coord.concat('multi'), true
     return cells
 
   undoStates: mori.list()
@@ -50,8 +64,6 @@ class RawStore extends Store
       store.canUndo = not mori.is_empty store.undoStates
       store.canRedo = true
 
-  caretPosition: null
-
 store = new RawStore
 
 store.registerCallback 'replace-cells', (cellsArray) ->
@@ -64,9 +76,8 @@ store.registerCallback 'replace-cells', (cellsArray) ->
   )
 
   store.cells = newCells
-  store.editingCoord = null
-  store.caretPosition = null
-  store.selectedCoord = [0, 0]
+  store.edit null
+  store.select [0, 0]
   recalc()
   store.changed()
 
@@ -83,11 +94,7 @@ store.registerCallback 'input-clicked', (element) ->
   store.caretPosition = utils.getCaretPosition element
 
 store.registerCallback 'cell-clicked', (coord) ->
-  if not store.editingCoord
-    store.selectedCoord = coord
-    store.changed()
-
-  else if store.editingCoord
+  if store.editingCoord
     valueBeingEdited = mori.get_in(
       store.cells
       store.editingCoord.concat 'raw'
@@ -118,47 +125,65 @@ store.registerCallback 'cell-clicked', (coord) ->
       )
     else
       # just blur
-      store.selectedCoord = coord
-      store.editingCoord = null
-      store.caretPosition = null
+      store.select coord
+      store.edit null
       recalc()
 
     store.changed()
 
+store.registerCallback 'cell-mousedown', (coord) ->
+  # normal cell select
+  if not store.editingCoord
+    store.select coord
+    store.changed()
+
+  # multi select thing
+  if not store.editingCoord
+    store.selectingMulti = true
+
+store.registerCallback 'cell-mouseenter', (coord) ->
+  if store.selectingMulti
+    store.multi = []
+    for i in [store.selectedCoord[0]..coord[0]]
+      for j in [store.selectedCoord[1]..coord[1]]
+        store.multi.push [i, j]
+    store.changed()
+
+store.registerCallback 'cell-mouseup', (coord) ->
+  if not store.editingCoord
+    store.selectingMulti = false
+
 store.registerCallback 'cell-doubleClicked', (coord) ->
-  store.selectedCoord = coord
-  store.editingCoord = coord
-  store.caretPosition = null
+  store.select coord
+  store.edit coord
   store.changed()
 
 store.registerCallback 'down', ->
   if store.editingCoord
     # blur
-    store.editingCoord = null
-    store.caretPosition = null
+    store.edit null
     recalc()
 
   # go one cell down
   if store.selectedCoord[0] < (mori.count(store.cells) - 1)
-    store.selectedCoord = [store.selectedCoord[0] + 1, store.selectedCoord[1]]
+    store.select [store.selectedCoord[0] + 1, store.selectedCoord[1]]
   store.changed()
 
 store.registerCallback 'up', ->
   if store.editingCoord
     # blur
-    store.editingCoord = null
-    store.caretPosition = null
+    store.edit null
     recalc()
 
   # go one cell up
   if store.selectedCoord[0] > 0
-    store.selectedCoord = [store.selectedCoord[0] - 1, store.selectedCoord[1]]
+    store.select [store.selectedCoord[0] - 1, store.selectedCoord[1]]
   store.changed()
 
 store.registerCallback 'left', (e) ->
   if not store.editingCoord
     if store.selectedCoord[1] > 0
-      store.selectedCoord = [store.selectedCoord[0], store.selectedCoord[1] - 1]
+      store.select [store.selectedCoord[0], store.selectedCoord[1] - 1]
       store.changed()
   else
     store.caretPosition = utils.getCaretPosition e.target
@@ -166,29 +191,29 @@ store.registerCallback 'left', (e) ->
 store.registerCallback 'right', (e) ->
   if not store.editingCoord
     if store.selectedCoord[1] < (mori.count(mori.get(store.cells, 0)) - 1)
-      store.selectedCoord = [store.selectedCoord[0], store.selectedCoord[1] + 1]
+      store.select [store.selectedCoord[0], store.selectedCoord[1] + 1]
       store.changed()
   else
     store.caretPosition = utils.getCaretPosition e.target
 
 store.registerCallback 'all-right', ->
   if not store.editingCoord
-    store.selectedCoord = [store.selectedCoord[0], mori.count(mori.get(store.cells, 0)) - 1]
+    store.select [store.selectedCoord[0], mori.count(mori.get(store.cells, 0)) - 1]
     store.changed()
 
 store.registerCallback 'all-down', ->
   if not store.editingCoord
-    store.selectedCoord = [mori.count(store.cells) - 1, store.selectedCoord[1]]
+    store.select [mori.count(store.cells) - 1, store.selectedCoord[1]]
     store.changed()
 
 store.registerCallback 'all-up', ->
   if not store.editingCoord
-    store.selectedCoord = [0, store.selectedCoord[1]]
+    store.select [0, store.selectedCoord[1]]
     store.changed()
 
 store.registerCallback 'all-left', ->
   if not store.editingCoord
-    store.selectedCoord = [store.selectedCoord[0], 0]
+    store.select [store.selectedCoord[0], 0]
     store.changed()
 
 store.registerCallback 'del', ->
@@ -199,6 +224,12 @@ store.registerCallback 'del', ->
       store.selectedCoord.concat 'raw'
       ''
     )
+    for coord in store.multi
+      store.cells = mori.assoc_in(
+        store.cells
+        coord.concat 'raw'
+        ''
+      )
     recalc()
     store.changed()
 
@@ -216,17 +247,23 @@ store.registerCallback 'letter', (e) ->
     )
     e.preventDefault()
     e.stopPropagation()
-    store.editingCoord = store.selectedCoord
-    store.caretPosition = null
+    store.edit store.selectedCoord
     store.changed()
 
 store.registerCallback 'esc', ->
   if store.editingCoord
     # stop editing, don't recalc and return to the previous version (undo)
-    store.editingCoord = null
-    store.caretPosition = null
+    store.edit null
     store.undo()
     store.changed()
+
+store.registerCallback 'sheet-clicked-out', ->
+  store.selectingMulti = false
+  store.multi = []
+  store.changed()
+
+store.registerCallback 'sheet-mouseup-out', ->
+  store.selectingMulti = false
 
 store.registerCallback 'undo', (e) ->
   store.undo()
