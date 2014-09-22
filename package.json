@@ -1,23 +1,25 @@
 {
   "name": "react-microspreadsheet",
-  "version": "0.1.4",
+  "version": "0.1.41",
   "description": "A pluggable spreadsheet component.",
   "main": "lib/Spreadsheet.js",
   "dependencies": {
-    "formulajs": "*",
+    "formulajs": "1.0.2",
     "mousetrap": "*",
     "mori": ">=0.2.x",
-    "coffee-loader": "^0.7.2",
-    "webpack": "^1.4.0-beta5",
-    "wolfy-eventemitter": "^0.1.0"
+    "wolfy-eventemitter": "^0.1.0",
+    "bessel": "0.2.0",
+    "jStat": "0.0.6",
+    "jsep": "^0.2.9",
+    "numeral": "1.5.3"
   },
   "peerDependencies": {
     "react": "*"
   },
   "devDependencies": {
+    "coffee-loader": "^0.7.2",
+    "webpack": "^1.4.0-beta5",
     "coffee-script": "^1.8.0",
-    "coffeeify": "^0.7.0",
-    "browserify": "^5.11.0",
     "less": "^1.7.4",
     "mocha": "^1.21.4",
     "jquery": "^2.1.1",
