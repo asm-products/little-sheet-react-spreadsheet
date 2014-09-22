@@ -1,7 +1,7 @@
 React = require 'react'
 mori = require 'mori'
 
-{table, tbody, tr, td, div, span, input} = React.DOM
+{table, tbody, tr, td, div, span, input, textarea} = React.DOM
 Cell = require './Cell'
 
 utils = require './utils'
@@ -29,6 +29,7 @@ Spreadsheet = React.createClass
     @setState
       cells: newCells
       caretPosition: cellStore.caretPosition
+      clipboard: cellStore.clipboard
 
     array = []
     for r in mori.clj_to_js(newCells)
@@ -49,28 +50,15 @@ Spreadsheet = React.createClass
     document.body.removeEventListener 'mouseup', @handleMouseUpOut
 
   render: ->
-    (table
+    (div
       className: 'microspreadsheet'
     ,
-      (tbody {},
-        (tr {},
-          (td className: 'label')
-          (td
-            className: 'label'
-            key: c
-          ,
-            utils.letters[c]
-          ) for c in [0..(mori.count(mori.get(@state.cells, 0))-1)]
-        )
-        (tr key: i,
-          (td {className: 'label'}, i + 1)
-          (Cell
-            rowKey: i
-            key: j
-            cell: mori.get_in @state.cells, [i, j]
-            caretPosition: @state.caretPosition
-          ) for j in [0..(mori.count(mori.get(@state.cells, 0))-1)]
-        ) for i in [0..(mori.count(@state.cells)-1)]
+      (Clipboard
+        value: @state.clipboard
+      )
+      (Cells
+        cells: @state.cells
+        caretPosition: @state.caretPosition
       )
     )
 
@@ -81,5 +69,62 @@ Spreadsheet = React.createClass
   handleMouseUpOut: (e) ->
     if e.target != @getDOMNode()
       dispatcher.handleSheetMouseUpOut e
+
+Clipboard = React.createClass
+  shouldComponentUpdate: (nextProps) ->
+    if nextProps.value != @props.value
+      return true
+    return false
+
+  componentDidUpdate: (prevProps) ->
+    if @refs.clipboard
+      node = @refs.clipboard.getDOMNode()
+      node.focus()
+      node.setSelectionRange 0, node.value.length
+
+  render: ->
+    (div className: 'clipboard-container',
+      (textarea
+        className: 'mousetrap'
+        ref: 'clipboard'
+        value: @props.value
+        onChange: @handleChange
+      ) if typeof @props.value is 'string'
+    )
+
+  handleChange: (e) -> dispatcher.handleClipboardChanged e.target.value
+
+Cells = React.createClass
+  shouldComponentUpdate: (nextProps) ->
+    unless mori.equals nextProps.cells, @props.cells or
+           mori.equals nextProps.caretPosition, @props.caretPosition
+      return true
+    else
+      return false
+
+  render: ->
+    (table {},
+      (tbody {},
+        (tr {},
+          (td className: 'label')
+          (td
+            className: 'label'
+            key: c
+          ,
+            utils.letters[c]
+          ) for c in [0..(mori.count(mori.get(@props.cells, 0))-1)]
+        )
+        (tr key: i,
+          (td {className: 'label'}, i + 1)
+          (Cell
+            rowKey: i
+            key: j
+            cell: mori.get_in @props.cells, [i, j]
+            caretPosition: @props.caretPosition
+          ) for j in [0..(mori.count(mori.get(@props.cells, 0))-1)]
+        ) for i in [0..(mori.count(@props.cells)-1)]
+      )
+    )
+
 
 module.exports = Spreadsheet

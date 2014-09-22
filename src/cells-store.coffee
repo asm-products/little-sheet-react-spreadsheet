@@ -1,11 +1,11 @@
 FORMULA = require 'formulajs'
 Store = require './base-store'
-mori = require 'mori'
+Mori = require 'mori'
 utils = require './utils'
 
 class RawStore extends Store
   # data
-  cells: mori.js_to_clj [
+  cells: Mori.js_to_clj [
     [
       {raw: '', calc: ''}
       {raw: '', calc: ''}
@@ -23,51 +23,53 @@ class RawStore extends Store
     ]
   ]
   selectedCoord: [0, 0]
-  multi: []
+  multi: [[0, 0], [0, 0]]
   selectingMulti: false
   editingCoord: null
   caretPosition: null
 
   select: (coord) ->
     @selectedCoord = coord
-    @multi = []
+    @multi = [coord, coord]
   edit: (coord) ->
     @editingCoord = coord
     @selectingMulti = false
-    @multi = []
     @caretPosition = null
 
   getCells: ->
-    cells = mori.assoc_in @cells, @selectedCoord.concat('selected'), true
+    cells = Mori.assoc_in @cells, @selectedCoord.concat('selected'), true
     if @editingCoord
-      cells = mori.assoc_in cells, @editingCoord.concat('editing'), true
-    for coord in @multi
-      cells = mori.assoc_in cells, coord.concat('multi'), true
+      cells = Mori.assoc_in cells, @editingCoord.concat('editing'), true
+    for i in [@multi[0][0]..@multi[1][0]]
+      for j in [@multi[0][1]..@multi[1][1]]
+        cells = Mori.assoc_in cells, [i, j, 'multi'], true
     return cells
 
-  undoStates: mori.list()
-  redoStates: mori.list()
+  undoStates: Mori.list()
+  redoStates: Mori.list()
   canUndo: false
   canRedo: false
   redo: ->
     if store.canRedo
-      store.undoStates = mori.conj store.undoStates, mori.first store.redoStates
-      store.cells = mori.first store.redoStates
-      store.redoStates = mori.drop 1, store.redoStates
-      store.canRedo = not mori.is_empty store.redoStates
+      store.undoStates = Mori.conj store.undoStates, Mori.first store.redoStates
+      store.cells = Mori.first store.redoStates
+      store.redoStates = Mori.drop 1, store.redoStates
+      store.canRedo = not Mori.is_empty store.redoStates
       store.canUndo = true
   undo: ->
     if store.canUndo
-      store.redoStates = mori.conj store.redoStates, mori.first this.undoStates
-      store.undoStates = mori.drop 1, store.undoStates
-      store.cells = mori.first store.undoStates
-      store.canUndo = not mori.is_empty store.undoStates
+      store.redoStates = Mori.conj store.redoStates, Mori.first this.undoStates
+      store.undoStates = Mori.drop 1, store.undoStates
+      store.cells = Mori.first store.undoStates
+      store.canUndo = not Mori.is_empty store.undoStates
       store.canRedo = true
+
+  clipboard: false
 
 store = new RawStore
 
 store.registerCallback 'replace-cells', (cellsArray) ->
-  newCells = mori.js_to_clj(
+  newCells = Mori.js_to_clj(
     (
       (
         {raw: rawValue, calc: ''}
@@ -82,7 +84,7 @@ store.registerCallback 'replace-cells', (cellsArray) ->
   store.changed()
 
 store.registerCallback 'new-cell-value', (value) ->
-  store.cells = mori.assoc_in(
+  store.cells = Mori.assoc_in(
     store.cells
     store.editingCoord.concat 'raw'
     value
@@ -95,7 +97,7 @@ store.registerCallback 'input-clicked', (element) ->
 
 store.registerCallback 'cell-clicked', (coord) ->
   if store.editingCoord
-    valueBeingEdited = mori.get_in(
+    valueBeingEdited = Mori.get_in(
       store.cells
       store.editingCoord.concat 'raw'
     )
@@ -103,7 +105,7 @@ store.registerCallback 'cell-clicked', (coord) ->
     if valueBeingEdited[0] == '='
       # clicked on a reference
       addr = utils.getAddressFromCoord coord # address is in the format 'A1'
-      store.cells = mori.update_in(
+      store.cells = Mori.update_in(
         store.cells
         store.editingCoord.concat 'raw'
         (val) ->
@@ -143,10 +145,7 @@ store.registerCallback 'cell-mousedown', (coord) ->
 
 store.registerCallback 'cell-mouseenter', (coord) ->
   if store.selectingMulti
-    store.multi = []
-    for i in [store.selectedCoord[0]..coord[0]]
-      for j in [store.selectedCoord[1]..coord[1]]
-        store.multi.push [i, j]
+    store.multi = [store.selectedCoord, coord]
     store.changed()
 
 store.registerCallback 'cell-mouseup', (coord) ->
@@ -165,7 +164,7 @@ store.registerCallback 'down', ->
     recalc()
 
   # go one cell down
-  if store.selectedCoord[0] < (mori.count(store.cells) - 1)
+  if store.selectedCoord[0] < (Mori.count(store.cells) - 1)
     store.select [store.selectedCoord[0] + 1, store.selectedCoord[1]]
   store.changed()
 
@@ -190,7 +189,7 @@ store.registerCallback 'left', (e) ->
 
 store.registerCallback 'right', (e) ->
   if not store.editingCoord
-    if store.selectedCoord[1] < (mori.count(mori.get(store.cells, 0)) - 1)
+    if store.selectedCoord[1] < (Mori.count(Mori.get(store.cells, 0)) - 1)
       store.select [store.selectedCoord[0], store.selectedCoord[1] + 1]
       store.changed()
   else
@@ -198,12 +197,12 @@ store.registerCallback 'right', (e) ->
 
 store.registerCallback 'all-right', ->
   if not store.editingCoord
-    store.select [store.selectedCoord[0], mori.count(mori.get(store.cells, 0)) - 1]
+    store.select [store.selectedCoord[0], Mori.count(Mori.get(store.cells, 0)) - 1]
     store.changed()
 
 store.registerCallback 'all-down', ->
   if not store.editingCoord
-    store.select [mori.count(store.cells) - 1, store.selectedCoord[1]]
+    store.select [Mori.count(store.cells) - 1, store.selectedCoord[1]]
     store.changed()
 
 store.registerCallback 'all-up', ->
@@ -219,17 +218,18 @@ store.registerCallback 'all-left', ->
 store.registerCallback 'del', ->
   if not store.editingCoord
     # delete the raw content and recalculate
-    store.cells = mori.assoc_in(
+    store.cells = Mori.assoc_in(
       store.cells
       store.selectedCoord.concat 'raw'
       ''
     )
-    for coord in store.multi
-      store.cells = mori.assoc_in(
-        store.cells
-        coord.concat 'raw'
-        ''
-      )
+    for i in [store.multi[0][0]..store.multi[1][0]]
+      for j in [store.multi[0][1]..store.multi[1][1]]
+        store.cells = Mori.assoc_in(
+          store.cells
+          [i, j, 'raw']
+          ''
+        )
     recalc()
     store.changed()
 
@@ -240,7 +240,7 @@ store.registerCallback 'letter', (e) ->
       return
 
     # assign the letter to the cell and start editing it
-    store.cells = mori.assoc_in(
+    store.cells = Mori.assoc_in(
       store.cells
       store.selectedCoord.concat 'raw'
       String.fromCharCode(e.keyCode or e.charCode)
@@ -259,7 +259,7 @@ store.registerCallback 'esc', ->
 
 store.registerCallback 'sheet-clicked-out', ->
   store.selectingMulti = false
-  store.multi = []
+  store.multi = [store.selectedCoord, store.selectedCoord]
   store.changed()
 
 store.registerCallback 'sheet-mouseup-out', ->
@@ -273,6 +273,66 @@ store.registerCallback 'redo', ->
   store.redo()
   store.changed()
 
+store.registerCallback 'before-copypaste', ->
+  if window.getSelection and window.getSelection().toString()
+    return
+  if document.selection and document.selection.createRange()
+    return
+
+  clipRows = []
+  for i in [store.multi[0][0]..store.multi[1][0]]
+    clipCells = []
+    for j in [store.multi[0][1]..store.multi[1][1]]
+      clipCells.push Mori.get_in store.cells, [i, j, 'calc']
+    clipRows.push clipCells.join '\t'
+  store.clipboard = clipRows.join '\n'
+
+  store.changed()
+
+store.registerCallback 'clipboardchanged', (what) ->
+  # a cut event, ctrl+x, leaving the clipboard empty
+  if what is ''
+    for i in [store.multi[0][0]..store.multi[1][0]]
+      for j in [store.multi[0][1]..store.multi[1][1]]
+        store.cells = Mori.assoc_in(
+          store.cells
+          [i, j, 'raw']
+          ''
+        )
+
+  # a paste event, ctrl+v, putting ne data the the clipboard
+  else
+    firstSelected = utils.firstCellFromMulti store.multi
+    pastedRows = what.split('\n')
+    for i in [0..pastedRows.length-1]
+      pastedRow = pastedRows[i].split('\t')
+      qi = i + firstSelected[0]
+      if qi >= Mori.count store.cells
+        # this condition checks for the end of the rows,
+        # so we don't end adding any data below the existent
+        # rows.
+        continue
+
+      for j in [0..pastedRow.length-1]
+        pastedCell = pastedRow[j]
+        qj = j + firstSelected[1]
+        if qj >= Mori.count Mori.get store.cells, 0
+          # this condition checks for the end of the cols,
+          continue
+
+        store.cells = Mori.assoc_in(
+          store.cells
+          [qi, qj, 'raw']
+          pastedCell
+        )
+
+  recalc()
+  store.changed()
+
+store.registerCallback 'after-copypaste', ->
+  store.clipboard = null
+  store.changed()
+
 recalc = (->
   calculated = {}
 
@@ -281,7 +341,7 @@ recalc = (->
       return calculated[addr]
     else
       coord = utils.getCoordFromAddress(addr)
-      raw = mori.get_in(
+      raw = Mori.get_in(
         store.cells
         coord.concat 'raw'
       )
@@ -355,17 +415,17 @@ recalc = (->
   return ->
     flush()
 
-    for i in [0..(mori.count(store.cells)-1)]
-      for j in [0..(mori.count(mori.get(store.cells, 0))-1)]
+    for i in [0..(Mori.count(store.cells)-1)]
+      for j in [0..(Mori.count(Mori.get(store.cells, 0))-1)]
         addr = utils.getAddressFromCoord([i, j])
-        raw = mori.get_in(store.cells, [i, j, 'raw'])
+        raw = Mori.get_in(store.cells, [i, j, 'raw'])
         calcRes = if raw[0] == '=' then getCalcResult(raw) else raw
         calculated[addr] = calcRes if typeof calcRes == 'number'
-        store.cells = mori.assoc_in(store.cells, [i, j, 'calc'], calcRes)
+        store.cells = Mori.assoc_in(store.cells, [i, j, 'calc'], calcRes)
 
     # after the recalc is done, save state
-    store.redoStates = mori.list()
-    store.undoStates = mori.conj store.undoStates, store.cells
+    store.redoStates = Mori.list()
+    store.undoStates = Mori.conj store.undoStates, store.cells
     store.canUndo = true
     store.canRedo = false
 

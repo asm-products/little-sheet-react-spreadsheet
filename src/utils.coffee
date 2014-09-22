@@ -42,8 +42,15 @@ function doGetCaretPosition (oField) {
 }
 `
 
+firstCellFromMulti = (multi) ->
+  return [
+    Math.min(multi[0][0], multi[1][0])
+    Math.min(multi[0][1], multi[1][1])
+  ]
+
 module.exports =
   letters: letters
   getAddressFromCoord: getAddressFromCoord
   getCoordFromAddress: getCoordFromAddress
   getCaretPosition: doGetCaretPosition
+  firstCellFromMulti: firstCellFromMulti
