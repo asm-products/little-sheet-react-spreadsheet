@@ -1,4 +1,6 @@
 tests/bundle.js
+dist
+dist/*
 *.swo
 *.swp
 src

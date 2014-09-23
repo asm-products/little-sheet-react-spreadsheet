@@ -2,6 +2,7 @@ lib
 index.js
 npm-debug.log
 react-microspreadsheet.css
+dist
 tests/bundle.js
 *.swo
 *.swp
