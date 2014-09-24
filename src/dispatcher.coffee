@@ -48,7 +48,6 @@ class Dispatcher extends EventEmitter
       'all-left': ['command+left', 'ctrl+left']
       'all-right': ['command+right', 'ctrl+right']
       'del': 'del'
-      'letter': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'w', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '=', '.', ',', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'W', 'Y', 'Z']
       'undo': 'ctrl+z'
       'redo': 'ctrl+y'
       'esc': 'esc'
@@ -76,6 +75,17 @@ class Dispatcher extends EventEmitter
         Mousetrap.bind shortcut, (e, combo) =>
           @emit channel, e, combo
         , 'keydown'
+      )()
+
+    keypress =
+      'letter': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'w', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '=', '.', ',', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'W', 'Y', 'Z']
+
+    for eventChannel, shortcut of keypress
+      (=>
+        channel = eventChannel
+        Mousetrap.bind shortcut, (e, combo) =>
+          @emit channel, e, combo
+        , 'keypress'
       )()
 
 dispatcher = new Dispatcher
