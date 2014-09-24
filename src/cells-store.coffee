@@ -162,7 +162,9 @@ store.registerCallback 'cell-doubleClicked', (coord) ->
   store.edit coord
   store.changed()
 
-store.registerCallback 'down', ->
+store.registerCallback 'down', (e) ->
+  e.preventDefault() # prevent scrolling
+
   if store.editingCoord
     # blur
     store.edit null
@@ -173,7 +175,9 @@ store.registerCallback 'down', ->
     store.select [store.selectedCoord[0] + 1, store.selectedCoord[1]]
   store.changed()
 
-store.registerCallback 'up', ->
+store.registerCallback 'up', (e) ->
+  e.preventDefault() # prevent scrolling
+
   if store.editingCoord
     # blur
     store.edit null
@@ -205,12 +209,16 @@ store.registerCallback 'all-right', ->
     store.select [store.selectedCoord[0], Mori.count(Mori.get(store.cells, 0)) - 1]
     store.changed()
 
-store.registerCallback 'all-down', ->
+store.registerCallback 'all-down', (e) ->
+  e.preventDefault() # prevent scrolling
+
   if not store.editingCoord
     store.select [Mori.count(store.cells) - 1, store.selectedCoord[1]]
     store.changed()
 
-store.registerCallback 'all-up', ->
+store.registerCallback 'all-up', (e) ->
+  e.preventDefault() # prevent scrolling
+
   if not store.editingCoord
     store.select [0, store.selectedCoord[1]]
     store.changed()
@@ -278,7 +286,9 @@ store.registerCallback 'redo', ->
   store.redo()
   store.changed()
 
-store.registerCallback 'before-copypaste', ->
+store.registerCallback 'before-copypaste', (e) ->
+  e.preventDefault() # prevent scrolling
+
   if window.getSelection and window.getSelection().toString()
     return
   if document.selection and document.selection.createRange()
@@ -301,6 +311,8 @@ store.registerCallback 'before-copypaste', ->
   store.changed()
 
 store.registerCallback 'copy', (e) ->
+  e.preventDefault() # prevent scrolling
+
   # get the selected raw content of the cells and the actually
   # copied text (the calc content that appears at the clipboard)
   # and use this to determine if we're pasting content selected
