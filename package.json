@@ -1,6 +1,6 @@
 {
   "name": "react-microspreadsheet",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A pluggable spreadsheet component.",
   "main": "lib/Spreadsheet.js",
   "dependencies": {
@@ -20,15 +20,17 @@
     "less": "^1.7.4",
     "mocha": "^1.21.4",
     "jquery": "^2.1.1",
-    "chai": "^1.9.1"
+    "chai": "^1.9.1",
+    "jison": "^0.4.15"
   },
   "scripts": {
-    "prepublish": "npm run compile-css && ./node_modules/.bin/coffee -c --bare --output lib/ src/",
+    "prepublish": "npm run jison && npm run compile-css && ./node_modules/.bin/coffee -c --bare --output lib/ src/",
+    "jison": "jison ./src/formula-parser.jison -o ./lib/formula-parser.js",
     "compile-css": "./node_modules/.bin/lessc --clean-css style.less react-microspreadsheet.css",
-    "test-phantom": "webpack --entry ./tests/tests.coffee ./tests/tests.coffee ./tests/bundle.js && mocha-phantomjs ./tests/index.html",
-    "test-browser": "webpack --entry ./tests/tests.coffee ./tests/tests.coffee ./tests/bundle.js && python -m SimpleHTTPServer 4000",
+    "test-phantom": "npm run jison && webpack --entry ./tests/tests.coffee ./tests/tests.coffee ./tests/bundle.js && mocha-phantomjs ./tests/index.html",
+    "test-browser": "npm run jison && webpack --entry ./tests/tests.coffee ./tests/tests.coffee ./tests/bundle.js && python -m SimpleHTTPServer 4000",
     "test": "npm run test-phantom",
-    "host": "npm run compile-css && webpack --entry ./src/browser.coffee ./dist/microspreadsheet.js && python -m SimpleHTTPServer 3000"
+    "host": "npm run compile-css && npm run jison && webpack --entry ./src/browser.coffee ./dist/microspreadsheet.js && python -m SimpleHTTPServer 3000"
   },
   "keywords": [
     "react-component",
