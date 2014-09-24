@@ -1,6 +1,6 @@
 {
   "name": "react-microspreadsheet",
-  "version": "0.1.41",
+  "version": "0.1.42",
   "description": "A pluggable spreadsheet component.",
   "main": "lib/Spreadsheet.js",
   "dependencies": {
@@ -8,10 +8,7 @@
     "mousetrap": "*",
     "mori": ">=0.2.x",
     "wolfy-eventemitter": "^0.1.0",
-    "bessel": "0.2.0",
-    "jStat": "0.0.6",
-    "jsep": "^0.2.9",
-    "numeral": "1.5.3"
+    "selix": "^1.1.0"
   },
   "peerDependencies": {
     "react": "*"

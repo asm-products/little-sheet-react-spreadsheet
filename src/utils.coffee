@@ -48,9 +48,16 @@ firstCellFromMulti = (multi) ->
     Math.min(multi[0][1], multi[1][1])
   ]
 
+lastCellFromMulti = (multi) ->
+  return [
+    Math.max(multi[0][0], multi[1][0])
+    Math.max(multi[0][1], multi[1][1])
+  ]
+
 module.exports =
   letters: letters
   getAddressFromCoord: getAddressFromCoord
   getCoordFromAddress: getCoordFromAddress
   getCaretPosition: doGetCaretPosition
   firstCellFromMulti: firstCellFromMulti
+  lastCellFromMulti: lastCellFromMulti

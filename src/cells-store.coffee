@@ -2,6 +2,7 @@ FORMULA = require 'formulajs'
 Store = require './base-store'
 Mori = require 'mori'
 utils = require './utils'
+selix = require 'selix'
 
 class RawStore extends Store
   # data
@@ -35,6 +36,9 @@ class RawStore extends Store
     @editingCoord = coord
     @selectingMulti = false
     @caretPosition = null
+    @rawClipboard = {} # by cleaning this here we avoid problems of people editing the
+                       # copied formulas and getting the updated content when pasting
+                       # and other similarly interesting bugs.
 
   getCells: ->
     cells = Mori.assoc_in @cells, @selectedCoord.concat('selected'), true
@@ -65,6 +69,7 @@ class RawStore extends Store
       store.canRedo = true
 
   clipboard: false
+  rawClipboard: {}
 
 store = new RawStore
 
@@ -280,14 +285,30 @@ store.registerCallback 'before-copypaste', ->
     return
 
   clipRows = []
-  for i in [store.multi[0][0]..store.multi[1][0]]
+
+  # store.multi is a two-element array pointing to the cells where the selection
+  # started/ended, this is needed to put it in the logical order of the smaller
+  # to higher cell (in coordinates)
+  multiRearranged = [utils.firstCellFromMulti(store.multi), utils.lastCellFromMulti(store.multi)]
+
+  for i in [multiRearranged[0][0]..multiRearranged[1][0]]
     clipCells = []
-    for j in [store.multi[0][1]..store.multi[1][1]]
+    for j in [multiRearranged[0][1]..multiRearranged[1][1]]
       clipCells.push Mori.get_in store.cells, [i, j, 'calc']
     clipRows.push clipCells.join '\t'
   store.clipboard = clipRows.join '\n'
 
   store.changed()
+
+store.registerCallback 'copy', (e) ->
+  # get the selected raw content of the cells and the actually
+  # copied text (the calc content that appears at the clipboard)
+  # and use this to determine if we're pasting content selected
+  # here or elsewhere when pasting at this same sheet.
+  clipboard = document.querySelector '.clipboard-container .clipboard'
+  if clipboard
+    store.rawClipboard = {}
+    store.rawClipboard[selix.getText clipboard] = store.multi
 
 store.registerCallback 'clipboardchanged', (what) ->
   # a cut event, ctrl+x, leaving the clipboard empty
@@ -300,12 +321,45 @@ store.registerCallback 'clipboardchanged', (what) ->
           ''
         )
 
-  # a paste event, ctrl+v, putting ne data the the clipboard
+  # a paste event, ctrl+v, putting data at the clipboard
   else
+    # when getting a paste, we need to check if the pasted cells
+    # were copied from this same sheet, in this case we will paste
+    # their raw values, instead of the values in the real user
+    # clipboard (which are the calc values).
+    # to check this, we see if the contents of the user's
+    # real clipboard are the same that were copied in the last
+    # captured 'copy' event.
+
+    if what of store.rawClipboard
+        # yes, they are.
+        # let's replace the pasted content with the corresponding
+        # cell raw values that we had previously captured
+        copied = store.rawClipboard[what]
+        store.rawClipboard = {}
+
+        # we will also rearrange the copied multi (`copied` is just
+        # a copy of `store.multi` at the that time) to ensure the right
+        # order of the cells when pasting.
+        copied = [utils.firstCellFromMulti(copied), utils.lastCellFromMulti(copied)]
+
+        # then we turn this into a two-dimension array
+        pastedRows = (Mori.get_in(
+            store.cells
+            [i, j, 'raw']
+        ) for j in [copied[0][1]..copied[1][1]] for i in [copied[0][0]..copied[1][0]])
+
+    else
+        # no, they are not, they were copied from somewhere else,
+        # let's just paste normally
+
+        # before, we create a two dimension array from the pasted string
+        pastedRows = (cell for cell in row.split('\t') for row in what.split('\n'))
+
+    # pasting
     firstSelected = utils.firstCellFromMulti store.multi
-    pastedRows = what.split('\n')
     for i in [0..pastedRows.length-1]
-      pastedRow = pastedRows[i].split('\t')
+      pastedRow = pastedRows[i]
       qi = i + firstSelected[0]
       if qi >= Mori.count store.cells
         # this condition checks for the end of the rows,
@@ -319,12 +373,30 @@ store.registerCallback 'clipboardchanged', (what) ->
         if qj >= Mori.count Mori.get store.cells, 0
           # this condition checks for the end of the cols,
           continue
-
         store.cells = Mori.assoc_in(
           store.cells
           [qi, qj, 'raw']
           pastedCell
         )
+
+    #lastRow = Mori.count(store.cells) - 1
+    #lastCol = Mori.count(Mori.get store.cells, 0) - 1
+    #pastedRowsLen = pastedRows.length - 1
+    #pastedColsLen = pastedRows[0].length - 1
+    #rowRangeEnd = firstSelected[0] + pastedRowsLen
+    #rowRangeEnd = if rowRangeEnd <= lastRow then rowRangeEnd else lastRow - firstSelected[0]
+    #rowRange = [firstSelected[0]..rowRangeEnd]
+    #colRangeEnd = firstSelected[1] + pastedColsLen
+    #colRangeEnd = if colRangeEnd <= lastCol then colRangeEnd else lastCol - firstSelected[1]
+    #colRange = [firstSelected[1]..colRangeEnd]
+
+    #for i in rowRange
+    #  for j in colRange
+    #    store.cells = Mori.assoc_in(
+    #      store.cells
+    #      [i, j, 'raw']
+    #      pastedRows[i-firstSelected[0]][j-firstSelected[1]]
+    #    )
 
   recalc()
   store.changed()

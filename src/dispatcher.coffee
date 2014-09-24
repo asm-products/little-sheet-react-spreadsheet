@@ -52,7 +52,8 @@ class Dispatcher extends EventEmitter
       'undo': 'ctrl+z'
       'redo': 'ctrl+y'
       'esc': 'esc'
-      'after-copypaste': ['ctrl', 'command']
+      'after-copypaste': ['ctrl', 'command'],
+      'copy': ['ctrl+c', 'command+c', 'ctrl+x', 'command+x']
 
     for eventChannel, shortcut of keyup
       (=>

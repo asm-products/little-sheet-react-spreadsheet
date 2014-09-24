@@ -85,7 +85,7 @@ Clipboard = React.createClass
   render: ->
     (div className: 'clipboard-container',
       (textarea
-        className: 'mousetrap'
+        className: 'mousetrap clipboard'
         ref: 'clipboard'
         value: @props.value
         onChange: @handleChange
