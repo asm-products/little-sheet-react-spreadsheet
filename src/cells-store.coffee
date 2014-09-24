@@ -98,7 +98,7 @@ store.registerCallback 'new-cell-value', (value) ->
   store.changed()
 
 store.registerCallback 'input-clicked', (element) ->
-  store.caretPosition = utils.getCaretPosition element
+  store.caretPosition = selix.getCaret(element).end
 
 store.registerCallback 'cell-clicked', (coord) ->
   if store.editingCoord
@@ -194,7 +194,7 @@ store.registerCallback 'left', (e) ->
       store.select [store.selectedCoord[0], store.selectedCoord[1] - 1]
       store.changed()
   else
-    store.caretPosition = utils.getCaretPosition e.target
+    store.caretPosition = selix.getCaret(e.target).start
 
 store.registerCallback 'right', (e) ->
   if not store.editingCoord
@@ -202,7 +202,7 @@ store.registerCallback 'right', (e) ->
       store.select [store.selectedCoord[0], store.selectedCoord[1] + 1]
       store.changed()
   else
-    store.caretPosition = utils.getCaretPosition e.target
+    store.caretPosition = selix.getCaret(e.target).end
 
 store.registerCallback 'all-right', ->
   if not store.editingCoord
