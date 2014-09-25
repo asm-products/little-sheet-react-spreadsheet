@@ -79,9 +79,9 @@ e
     | '(' e ')'
         {$$ = $2;}
     | CELL ':' CELL
-        {$$ = require('../src/recalc.coffee').getMatrixValues($1, $3);}
+        {$$ = getMatrixValues($1, $3);}
     | CELL
-        {$$ = require('../src/recalc.coffee').getCalcResultAt($1);}
+        {$$ = getCalcResultAt($1);}
     | WORD '(' args ')'
         {$$ = require('formulajs')[$1.toUpperCase()].apply(this, $3);}
     | NUMBER

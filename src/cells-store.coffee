@@ -2,7 +2,6 @@ Store = require './base-store'
 Mori = require 'mori'
 utils = require './utils'
 selix = require 'selix'
-Recalc = require './recalc.coffee'
 
 class RawStore extends Store
   # data
@@ -417,8 +416,6 @@ store.registerCallback 'after-copypaste', ->
   store.clipboard = null
   store.changed()
 
-recalc = ((s) ->
-  return -> Recalc(s)
-)(store)
-
 module.exports = store
+
+{recalc} = require './recalc'

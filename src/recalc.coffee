@@ -1,21 +1,22 @@
 Mori = require 'mori'
-parser = require '../lib/formula-parser.js'
-utils = require './utils.coffee'
+utils = require './utils'
+store = require './cells-store'
 
-store = null
 calculated = {}
 flush = -> calculated = {}
 
-module.exports = recalc = (injectedStore) ->
-  store = injectedStore
+module.exports.getUtils = ->
+  getCalcResultAt: -> getCalcResultAt.apply @, arguments
+  getMatrixValues: -> getMatrixValues.apply @, arguments
 
+module.exports.recalc = ->
   flush()
 
   for i in [0..(Mori.count(store.cells)-1)]
     for j in [0..(Mori.count(Mori.get(store.cells, 0))-1)]
       addr = utils.getAddressFromCoord([i, j])
       raw = Mori.get_in(store.cells, [i, j, 'raw'])
-      calcRes = if raw[0] == '=' then getCalcResult(raw) else raw
+      calcRes = if raw[0] == '=' and raw.slice 1 then getCalcResult raw else raw
       calculated[addr.toUpperCase()] = calcRes if typeof calcRes == 'number'
       store.cells = Mori.assoc_in(store.cells, [i, j, 'calc'], calcRes)
 
@@ -68,5 +69,4 @@ getMatrixValues = (start, end) ->
 
   return matrix
 
-module.exports.getCalcResultAt = getCalcResultAt
-module.exports.getMatrixValues = getMatrixValues
+parser = require './formula-parser'

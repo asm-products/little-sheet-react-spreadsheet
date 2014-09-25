@@ -1,6 +1,6 @@
 {
   "name": "react-microspreadsheet",
-  "version": "0.1.6",
+  "version": "0.1.61",
   "description": "A pluggable spreadsheet component.",
   "main": "lib/Spreadsheet.js",
   "dependencies": {
@@ -25,7 +25,7 @@
   },
   "scripts": {
     "prepublish": "npm run jison && npm run compile-css && ./node_modules/.bin/coffee -c --bare --output lib/ src/",
-    "jison": "jison ./src/formula-parser.jison -o ./lib/formula-parser.js",
+    "jison": "jison ./src/formula-parser.jison -o ./src/formula-parser-pre.js && cat ./src/formula-parser-pre.js ./src/formula-parser-includes.js > ./src/formula-parser.js",
     "compile-css": "./node_modules/.bin/lessc --clean-css style.less react-microspreadsheet.css",
     "test-phantom": "npm run jison && webpack --entry ./tests/tests.coffee ./tests/tests.coffee ./tests/bundle.js && mocha-phantomjs ./tests/index.html",
     "test-browser": "npm run jison && webpack --entry ./tests/tests.coffee ./tests/tests.coffee ./tests/bundle.js && python -m SimpleHTTPServer 4000",
