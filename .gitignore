@@ -7,3 +7,4 @@ tests/bundle.js
 *.swo
 *.swp
 node_modules
+src/formula-parser.js
