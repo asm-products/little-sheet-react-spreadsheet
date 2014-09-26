@@ -47,6 +47,9 @@ Cell = React.createClass
         ) else (span
           onClick: @handleClick
           onDoubleClick: @handleDoubleClick
+          onTouchStart: @handleRouchStart
+          onTouchEnd: @handleRouchEnd
+          onTouchCancel: @handleRouchEnd
           onMouseDown: @handleMouseDown
           onMouseUp: @handleMouseUp
           onMouseMove: @handleMouseMove
@@ -70,6 +73,15 @@ Cell = React.createClass
 
   handleDoubleClick: (e) ->
     e.preventDefault()
+    dispatcher.handleCellDoubleClicked [@props.rowKey, @props.key]
+
+  handleTouchStart: (e) ->
+    @timer = setTimeout @handleLongTouch, 700
+
+  handleTouchEnd: (e) ->
+    clearTimeout @timer
+
+  handleLongTouch: ->
     dispatcher.handleCellDoubleClicked [@props.rowKey, @props.key]
 
   handleMouseDown: (e) ->
