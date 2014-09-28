@@ -1,6 +1,6 @@
 {
   "name": "react-microspreadsheet",
-  "version": "0.1.61",
+  "version": "0.1.7",
   "description": "A pluggable spreadsheet component.",
   "main": "lib/Spreadsheet.js",
   "dependencies": {

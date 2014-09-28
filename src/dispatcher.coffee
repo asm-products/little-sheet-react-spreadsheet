@@ -20,6 +20,9 @@ class Dispatcher extends EventEmitter
   handleCellMouseDown: (coord) ->
     @emit 'cell-mousedown', coord
 
+  handleMouseDownStrap: (coord) ->
+    @emit 'strap-mousedown', coord
+
   handleCellMouseUp: (coord) ->
     @emit 'cell-mouseup', coord
 

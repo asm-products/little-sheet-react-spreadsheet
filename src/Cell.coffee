@@ -36,6 +36,9 @@ Cell = React.createClass
       } #{
         if mori.get(@props.cell, 'multi') then 'multi-selected' else ''
       }"
+      onMouseUp: @handleMouseUp
+      onMouseMove: @handleMouseMove
+      onMouseEnter: @handleMouseEnter
     ,
       (div {},
         if mori.get @props.cell, 'editing' then (input
@@ -51,13 +54,14 @@ Cell = React.createClass
           onTouchEnd: @handleRouchEnd
           onTouchCancel: @handleRouchEnd
           onMouseDown: @handleMouseDown
-          onMouseUp: @handleMouseUp
-          onMouseMove: @handleMouseMove
-          onMouseEnter: @handleMouseEnter
         ,
           mori.get @props.cell, 'calc'
         )
       )
+      (div
+        className: 'strap'
+        onMouseDown: @handleMouseDownStrap
+      ) if mori.get @props.cell, 'last-multi'
     )
 
   handleChange: (e) ->
@@ -83,6 +87,11 @@ Cell = React.createClass
 
   handleLongTouch: ->
     dispatcher.handleCellDoubleClicked [@props.rowKey, @props.key]
+
+  handleMouseDownStrap: (e) ->
+    e.stopPropagation()
+    e.preventDefault()
+    dispatcher.handleMouseDownStrap [@props.rowKey, @props.key]
 
   handleMouseDown: (e) ->
     e.preventDefault()

@@ -37,6 +37,7 @@
     }
     td.cell {
       padding: 0;
+      position: relative;
 
       &.multi-selected div {
         background-color: rgba(194, 221, 178, 0.2);
@@ -72,6 +73,17 @@
         input {
           outline: none;
         }
+      }
+
+      .strap {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        right: 0px;
+        bottom: 0px;
+        background: white;
+        z-index: 200;
+        cursor: crosshair;
       }
     }
   }

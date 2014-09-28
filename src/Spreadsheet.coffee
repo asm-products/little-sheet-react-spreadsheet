@@ -63,12 +63,18 @@ Spreadsheet = React.createClass
     )
 
   handleClickOut: (e) ->
-    if e.target != @getDOMNode()
-      dispatcher.handleSheetClickedOut e
+    for i in [4..e.path.length-1]
+      node = e.path[i]
+      if node == @getDOMNode()
+        return
+    dispatcher.handleSheetClickedOut e
 
   handleMouseUpOut: (e) ->
-    if e.target != @getDOMNode()
-      dispatcher.handleSheetMouseUpOut e
+    for i in [4..e.path.length-1]
+      node = e.path[i]
+      if node == @getDOMNode()
+        return
+    dispatcher.handleSheetMouseUpOut e
 
 Clipboard = React.createClass
   shouldComponentUpdate: (nextProps) ->

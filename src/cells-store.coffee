@@ -25,6 +25,8 @@ class RawStore extends Store
   selectedCoord: [0, 0]
   multi: [[0, 0], [0, 0]]
   selectingMulti: false
+  strapping: false
+  strapVector: [null, null, null]
   editingCoord: null
   caretPosition: null
 
@@ -41,11 +43,28 @@ class RawStore extends Store
 
   getCells: ->
     cells = Mori.assoc_in @cells, @selectedCoord.concat('selected'), true
+
     if @editingCoord
       cells = Mori.assoc_in cells, @editingCoord.concat('editing'), true
-    for i in [@multi[0][0]..@multi[1][0]]
-      for j in [@multi[0][1]..@multi[1][1]]
+
+    if @strapVector[1] != null
+      # this only works if the first is the first and the second is the second
+      highlight = [utils.firstCellFromMulti(@multi), utils.lastCellFromMulti(@multi)]
+      # plus, we gain a free cloning of @multi into something we can modify with
+
+      # heavy math:
+      #         left/top or right/bottom  vertical or horizontal  
+      highlight[    @strapVector[1]     ][    @strapVector[0]   ] += @strapVector[2]
+
+    else
+      highlight = @multi
+
+    for i in [highlight[0][0]..highlight[1][0]]
+      for j in [highlight[0][1]..highlight[1][1]]
         cells = Mori.assoc_in cells, [i, j, 'multi'], true
+
+    cells = Mori.assoc_in cells, utils.lastCellFromMulti(store.multi).concat('last-multi'), true
+
     return cells
 
   undoStates: Mori.list()
@@ -138,13 +157,12 @@ store.registerCallback 'cell-clicked', (coord) ->
     store.changed()
 
 store.registerCallback 'cell-mousedown', (coord) ->
-  # normal cell select
   if not store.editingCoord
+    # normal cell select
     store.select coord
     store.changed()
 
-  # multi select thing
-  if not store.editingCoord
+    # multi select thing
     store.selectingMulti = true
 
 store.registerCallback 'cell-mouseenter', (coord) ->
@@ -152,9 +170,85 @@ store.registerCallback 'cell-mouseenter', (coord) ->
     store.multi = [store.selectedCoord, coord]
     store.changed()
 
+  else if store.strapping
+    ###
+    check if coord is at the same vertical or horizontal
+    lines of the multi-selection
+    example:
+      store.multi = [[3,1], [4,2]]
+      coord[0] must be within the range 3-4 -> same horizontal line
+      coord[1] must be within the range 1-2 -> same vertical line
+
+    the strapping zone will be described by a tuple of [
+      direction -> either 0 for 'vertical' or 1 for 'horizontal' (this is
+                   because the first element (0) of any coord array describes
+                   the number of rows, the second (1) describes the number
+                   of columns)
+      sense -> either 0 for 'left' or 'top' or 1 for 'right' or 'bottom' (
+               this is because in the normalized store.multi, the first cell (0)
+               will describe the leftmost and uppermost point, the second cell (1)
+               will describe the rightmost and bottommost point, which we will
+               modify accordingly)
+      magnitude -> an integer describing how many columns/rows ocuppy
+                   the strapping zone beggining where the multi-selection
+                   ends and extending to where the mouse is.
+    ] 
+    ###
+    if coord[0] in [store.multi[0][0]..store.multi[1][0]]
+      ### horizontal
+      in this case, we must check if the zone will be to the left of the
+      current selection or to the right, and the magnitude of the vector
+      example:
+        store.multi = [[5,2], [3,3]]
+        we get the minimum of (coord[1] - 3), (coord[1] - 2) if they are positive
+        and the maximum, if they are negative.
+
+        the result will be the magnitude, the sense will be 0
+        if the result is negative, 1 if it is positive.
+      ###
+      x = coord[1] - store.multi[0][1]
+      y = coord[1] - store.multi[1][1]
+      if x > 0
+        store.strapVector = [1, 1, Math.min x, y]
+      else if x < 0
+        store.strapVector = [1, 0, Math.max x, y]
+
+    else if coord[1] in [store.multi[0][1]..store.multi[1][1]]
+      ### vertical
+        the procedure is analogal with the horizontal.
+        but instead we use coord[0]
+      ###
+      x = coord[0] - store.multi[0][0]
+      y = coord[0] - store.multi[1][0]
+      if x > 0
+        store.strapVector = [0, 1, Math.min x, y]
+      else if x < 0
+        store.strapVector = [0, 0, Math.max x, y]
+
+    store.changed()
+
 store.registerCallback 'cell-mouseup', (coord) ->
   if not store.editingCoord
     store.selectingMulti = false
+
+    if store.strapping
+      expandPattern()
+
+      # expand the multi-selected area to the strapped area
+      # (using the same heavy math used in store.getCells)
+      # then clear the strapping things.
+      store.multi = [utils.firstCellFromMulti(store.multi), utils.lastCellFromMulti(store.multi)]
+      store.multi[store.strapVector[1]][store.strapVector[0]] += store.strapVector[2]
+      store.strapping = false
+      store.strapVector = [null, null, null]
+
+      recalc()
+      store.changed()
+
+store.registerCallback 'strap-mousedown', (coord) ->
+  if not store.editingCoord
+    store.strapping = true
+    store.changed()
 
 store.registerCallback 'cell-doubleClicked', (coord) ->
   store.select coord
@@ -390,25 +484,6 @@ store.registerCallback 'clipboardchanged', (what) ->
           pastedCell
         )
 
-    #lastRow = Mori.count(store.cells) - 1
-    #lastCol = Mori.count(Mori.get store.cells, 0) - 1
-    #pastedRowsLen = pastedRows.length - 1
-    #pastedColsLen = pastedRows[0].length - 1
-    #rowRangeEnd = firstSelected[0] + pastedRowsLen
-    #rowRangeEnd = if rowRangeEnd <= lastRow then rowRangeEnd else lastRow - firstSelected[0]
-    #rowRange = [firstSelected[0]..rowRangeEnd]
-    #colRangeEnd = firstSelected[1] + pastedColsLen
-    #colRangeEnd = if colRangeEnd <= lastCol then colRangeEnd else lastCol - firstSelected[1]
-    #colRange = [firstSelected[1]..colRangeEnd]
-
-    #for i in rowRange
-    #  for j in colRange
-    #    store.cells = Mori.assoc_in(
-    #      store.cells
-    #      [i, j, 'raw']
-    #      pastedRows[i-firstSelected[0]][j-firstSelected[1]]
-    #    )
-
   recalc()
   store.changed()
 
@@ -419,3 +494,4 @@ store.registerCallback 'after-copypaste', ->
 module.exports = store
 
 {recalc} = require './recalc'
+expandPattern = require './expand-pattern'

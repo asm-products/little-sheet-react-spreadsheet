@@ -29,3 +29,4 @@ module.exports =
   getCoordFromAddress: getCoordFromAddress
   firstCellFromMulti: firstCellFromMulti
   lastCellFromMulti: lastCellFromMulti
+  log: (res, base) -> Math.log(res)/Math.log(base)
