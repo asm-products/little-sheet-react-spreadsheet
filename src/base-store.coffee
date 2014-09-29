@@ -11,6 +11,10 @@ class Store extends EventEmitter
   registerCallback: (event, fn) ->
     dispatcher.on event, fn
 
+  # trigger callback
+  triggerCallback: (event) ->
+    dispatcher.emit event, arguments[1], arguments[2]
+
   # emit change event
   changed: ->
     @emit 'CHANGE'

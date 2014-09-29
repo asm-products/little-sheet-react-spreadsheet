@@ -69,6 +69,15 @@ class Dispatcher extends EventEmitter
       'up': 'up'
       'left': 'left'
       'right': 'right'
+      'tab': 'tab'
+      'select-down': 'shift+down'
+      'select-up': 'shift+up'
+      'select-left': 'shift+left'
+      'select-right': 'shift+right'
+      'select-all-down': ['ctrl+shift+down', 'command+shift+down']
+      'select-all-up': ['ctrl+shift+up', 'command+shift+up']
+      'select-all-left': ['ctrl+shift+left', 'command+shift+left']
+      'select-all-right': ['ctrl+shift+right', 'command+shift+right']
       'before-copypaste': ['ctrl', 'command']
       'cutcopy': ['ctrl+c', 'command+c', 'ctrl+x', 'command+x']
 

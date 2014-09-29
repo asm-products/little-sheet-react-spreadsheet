@@ -281,6 +281,21 @@ store.registerCallback 'up', (e) ->
     store.select [store.selectedCoord[0] - 1, store.selectedCoord[1]]
   store.changed()
 
+store.registerCallback 'tab', (e) ->
+  e.preventDefault()
+  if store.editingCoord
+    # blur
+    store.edit null
+    recalc()
+
+  # when at the end of line, jump to the next
+  if store.selectedCoord[1] == (Mori.count(Mori.get store.cells, 0) - 1)
+    if store.selectedCoord[0] + 1 <= (Mori.count(store.cells) - 1)
+      store.select [store.selectedCoord[0] + 1, 0]
+      store.changed()
+  else
+    store.triggerCallback 'right', e
+
 store.registerCallback 'left', (e) ->
   if not store.editingCoord
     if store.selectedCoord[1] > 0
@@ -302,16 +317,12 @@ store.registerCallback 'all-right', ->
     store.select [store.selectedCoord[0], Mori.count(Mori.get(store.cells, 0)) - 1]
     store.changed()
 
-store.registerCallback 'all-down', (e) ->
-  e.preventDefault() # prevent scrolling
-
+store.registerCallback 'all-down', ->
   if not store.editingCoord
     store.select [Mori.count(store.cells) - 1, store.selectedCoord[1]]
     store.changed()
 
-store.registerCallback 'all-up', (e) ->
-  e.preventDefault() # prevent scrolling
-
+store.registerCallback 'all-up', ->
   if not store.editingCoord
     store.select [0, store.selectedCoord[1]]
     store.changed()
@@ -319,6 +330,66 @@ store.registerCallback 'all-up', (e) ->
 store.registerCallback 'all-left', ->
   if not store.editingCoord
     store.select [store.selectedCoord[0], 0]
+    store.changed()
+
+store.registerCallback 'select-down', (e) ->
+  if not store.editingCoord
+    e.preventDefault()
+    edge = store.multi[1]
+    if edge[0] < (Mori.count(store.cells) - 1)
+      store.multi = [store.selectedCoord, [edge[0] + 1, edge[1]]]
+      store.changed()
+
+store.registerCallback 'select-up', (e) ->
+  if not store.editingCoord
+    e.preventDefault()
+    edge = store.multi[1]
+    if edge[0] > 0
+      store.multi = [store.selectedCoord, [edge[0] - 1, edge[1]]]
+      store.changed()
+
+store.registerCallback 'select-left', (e) ->
+  if not store.editingCoord
+    e.preventDefault()
+    edge = store.multi[1]
+    if edge[1] > 0
+      store.multi = [store.selectedCoord, [edge[0], edge[1] - 1]]
+      store.changed()
+
+store.registerCallback 'select-right', (e) ->
+  if not store.editingCoord
+    e.preventDefault()
+    edge = store.multi[1]
+    if edge[1] < (Mori.count(Mori.get(store.cells, 0)) - 1)
+      store.multi = [store.selectedCoord, [edge[0], edge[1] + 1]]
+      store.changed()
+
+store.registerCallback 'select-all-right', (e) ->
+  if not store.editingCoord
+    e.preventDefault()
+    edge = store.multi[1]
+    store.multi = [store.selectedCoord, [edge[0], Mori.count(Mori.get(store.cells, 0)) - 1]]
+    store.changed()
+
+store.registerCallback 'select-all-down', (e) ->
+  if not store.editingCoord
+    e.preventDefault()
+    edge = store.multi[1]
+    store.multi = [store.selectedCoord, [Mori.count(store.cells) - 1, edge[1]]]
+    store.changed()
+
+store.registerCallback 'select-all-up', (e) ->
+  if not store.editingCoord
+    e.preventDefault()
+    edge = store.multi[1]
+    store.multi = [store.selectedCoord, [0, edge[1]]]
+    store.changed()
+
+store.registerCallback 'select-all-left', (e) ->
+  if not store.editingCoord
+    e.preventDefault()
+    edge = store.multi[1]
+    store.multi = [store.selectedCoord, [edge[0], 0]]
     store.changed()
 
 store.registerCallback 'del', ->
