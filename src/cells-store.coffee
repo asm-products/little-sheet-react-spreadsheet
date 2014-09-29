@@ -366,6 +366,8 @@ store.registerCallback 'esc', ->
 store.registerCallback 'sheet-clicked-out', ->
   store.selectingMulti = false
   store.multi = [store.selectedCoord, store.selectedCoord]
+  store.strapping = false
+  store.strapVector = [null, null, null]
   store.changed()
 
 store.registerCallback 'sheet-mouseup-out', ->
