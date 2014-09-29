@@ -35,6 +35,7 @@ getCalcResultAt = (addr) ->
     raw = Mori.get_in(
       store.cells
       coord.concat 'raw'
+      ''
     )
     return getCalcResult raw
 
