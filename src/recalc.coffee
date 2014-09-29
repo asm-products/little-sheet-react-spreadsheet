@@ -43,7 +43,7 @@ getCalcResult = (raw) ->
   if raw[0] == '='
     return parser.parse raw.slice 1
   else
-    return parseStr raw
+    return parseStr raw.toString()
 
 parseStr = (raw) ->
   return 0 if not raw.length
