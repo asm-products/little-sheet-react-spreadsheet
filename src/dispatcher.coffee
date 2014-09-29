@@ -55,7 +55,6 @@ class Dispatcher extends EventEmitter
       'redo': 'ctrl+y'
       'esc': 'esc'
       'after-copypaste': ['ctrl', 'command'],
-      'copy': ['ctrl+c', 'command+c', 'ctrl+x', 'command+x']
 
     for eventChannel, shortcut of keyup
       (=>
@@ -71,6 +70,7 @@ class Dispatcher extends EventEmitter
       'left': 'left'
       'right': 'right'
       'before-copypaste': ['ctrl', 'command']
+      'cutcopy': ['ctrl+c', 'command+c', 'ctrl+x', 'command+x']
 
     for eventChannel, shortcut of keydown
       (=>

@@ -37,9 +37,6 @@ class RawStore extends Store
     @editingCoord = coord
     @selectingMulti = false
     @caretPosition = null
-    @rawClipboard = {} # by cleaning this here we avoid problems of people editing the
-                       # copied formulas and getting the updated content when pasting
-                       # and other similarly interesting bugs.
 
   getCells: ->
     cells = Mori.assoc_in @cells, @selectedCoord.concat('selected'), true
@@ -114,6 +111,9 @@ store.registerCallback 'new-cell-value', (value) ->
   )
   store.caretPosition = null
   store.changed()
+  store.rawClipboard = {} # by cleaning this here we avoid problems of people editing the
+                          # copied formulas and getting the updated content when pasting
+                          # (and other similarly interesting bugs).
 
 store.registerCallback 'input-clicked', (element) ->
   store.caretPosition = selix.getCaret(element).end
@@ -405,17 +405,26 @@ store.registerCallback 'before-copypaste', (e) ->
 
   store.changed()
 
-store.registerCallback 'copy', (e) ->
-  e.preventDefault() # prevent scrolling
-
+store.registerCallback 'cutcopy', (e) ->
   # get the selected raw content of the cells and the actually
   # copied text (the calc content that appears at the clipboard)
   # and use this to determine if we're pasting content selected
   # here or elsewhere when pasting at this same sheet.
   clipboard = document.querySelector '.clipboard-container .clipboard'
   if clipboard
+    # we will rearrange the copied multi to ensure the right
+    # order of the cells when pasting.
+    copied = [utils.firstCellFromMulti(store.multi), utils.lastCellFromMulti(store.multi)]
+
+    # then we turn this into a two-dimension array of values
+    copiedRows = (Mori.get_in(
+        store.cells
+        [i, j, 'raw']
+    ) for j in [copied[0][1]..copied[1][1]] for i in [copied[0][0]..copied[1][0]])
+
+    # then save it to out internal clipboard
     store.rawClipboard = {}
-    store.rawClipboard[selix.getText clipboard] = store.multi
+    store.rawClipboard[selix.getText clipboard] = copiedRows
 
 store.registerCallback 'clipboardchanged', (what) ->
   # a cut event, ctrl+x, leaving the clipboard empty
@@ -442,19 +451,7 @@ store.registerCallback 'clipboardchanged', (what) ->
         # yes, they are.
         # let's replace the pasted content with the corresponding
         # cell raw values that we had previously captured
-        copied = store.rawClipboard[what]
-        store.rawClipboard = {}
-
-        # we will also rearrange the copied multi (`copied` is just
-        # a copy of `store.multi` at the that time) to ensure the right
-        # order of the cells when pasting.
-        copied = [utils.firstCellFromMulti(copied), utils.lastCellFromMulti(copied)]
-
-        # then we turn this into a two-dimension array
-        pastedRows = (Mori.get_in(
-            store.cells
-            [i, j, 'raw']
-        ) for j in [copied[0][1]..copied[1][1]] for i in [copied[0][0]..copied[1][0]])
+        pastedRows = store.rawClipboard[what]
 
     else
         # no, they are not, they were copied from somewhere else,
