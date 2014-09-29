@@ -231,7 +231,7 @@ store.registerCallback 'cell-mouseup', (coord) ->
   if not store.editingCoord
     store.selectingMulti = false
 
-    if store.strapping
+    if store.strapping and store.strapVector[1] != null
       expandPattern()
 
       # expand the multi-selected area to the strapped area
