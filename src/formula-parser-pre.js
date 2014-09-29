@@ -84,7 +84,7 @@ performAction: function anonymous(yytext, yyleng, yylineno, yy, yystate /* actio
 var $0 = $$.length - 1;
 switch (yystate) {
 case 1:
-console.log($$[$0-1]); return $$[$0-1];
+return $$[$0-1];
 break;
 case 2:
 this.$ = !$$[$0];
@@ -132,7 +132,7 @@ case 16:
 this.$ = getCalcResultAt($$[$0]);
 break;
 case 17:
-this.$ = require('formulajs')[$$[$0-3].toUpperCase()].apply(this, $$[$0-1]);
+this.$ = require('formulajs')[$$[$0-3].toUpperCase()].apply(this, $$[$0-1]); if (this.$.message) { this.$ = this.$.message }
 break;
 case 18:
 this.$ = Number(yytext);

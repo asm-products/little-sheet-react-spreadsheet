@@ -48,7 +48,7 @@
 
 expressions
     : e EOF
-        {console.log($1); return $1;}
+        {return $1;}
     ;
 
 e
@@ -83,7 +83,7 @@ e
     | CELL
         {$$ = getCalcResultAt($1);}
     | WORD '(' args ')'
-        {$$ = require('formulajs')[$1.toUpperCase()].apply(this, $3);}
+        {$$ = require('formulajs')[$1.toUpperCase()].apply(this, $3); if ($$.message) { $$ = $$.message }}
     | NUMBER
         {$$ = Number(yytext);}
     | E
