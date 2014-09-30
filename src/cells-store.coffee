@@ -28,6 +28,10 @@ class RawStore extends Store
   strapping: false
   strapVector: [null, null, null]
   editingCoord: null
+  volatileEdit: false # volatileEdit is a mode of edition in which it is easy to stop editing,
+                      # by pressing left or right, for example.
+                      # useful when we are quickly adding a lot of records to a sheet
+  refEdit: false
   caretPosition: null
 
   select: (coord) ->
@@ -37,6 +41,8 @@ class RawStore extends Store
     @editingCoord = coord
     @selectingMulti = false
     @caretPosition = null
+    @volatileEdit = false
+    @refEdit = false
 
   getCells: ->
     cells = Mori.assoc_in @cells, @selectedCoord.concat('selected'), true
@@ -110,13 +116,43 @@ store.registerCallback 'new-cell-value', (value) ->
     value
   )
   store.caretPosition = null
+
+  # make refs addable by clicking at other cells (when applicable)
+  store.refEdit = true
+
   store.changed()
   store.rawClipboard = {} # by cleaning this here we avoid problems of people editing the
                           # copied formulas and getting the updated content when pasting
                           # (and other similarly interesting bugs).
 
 store.registerCallback 'input-clicked', (element) ->
-  store.caretPosition = selix.getCaret(element).end
+  caret = selix.getCaret(element)
+  store.caretPosition = caret.end if caret.end == caret.start
+
+  # when we click on an input we lose the volatileEdit mode
+  store.volatileEdit = false
+
+  # make refs addable by clicking at other cells (when applicable)
+  store.refEdit = true
+
+store.registerCallback 'input-selecttext', (element) ->
+  if selix.getText element
+    # make refs addable by clicking at other cells (when applicable)
+    store.refEdit = true
+
+store.registerCallback 'input-doubleclicked', (element) ->
+  # make refs addable by clicking at other cells (when applicable)
+  store.refEdit = true
+
+store.registerCallback 'left-keyup', (e) ->
+  if store.editingCoord and e.target.tagName == 'INPUT'
+    # take note of the caret position
+    store.caretPosition = selix.getCaret(e.target).start
+
+store.registerCallback 'right-keyup', (e) ->
+  if store.editingCoord and e.target.tagName == 'INPUT'
+    # take note of the caret position
+    store.caretPosition = selix.getCaret(e.target).end
 
 store.registerCallback 'cell-clicked', (coord) ->
   if store.editingCoord
@@ -125,7 +161,7 @@ store.registerCallback 'cell-clicked', (coord) ->
       store.editingCoord.concat 'raw'
     )
 
-    if valueBeingEdited[0] == '='
+    if valueBeingEdited[0] == '=' and store.refEdit or store.volatileEdit
       # clicked on a reference
       addr = utils.getAddressFromCoord coord # address is in the format 'A1'
       store.cells = Mori.update_in(
@@ -133,15 +169,25 @@ store.registerCallback 'cell-clicked', (coord) ->
         store.editingCoord.concat 'raw'
         (val) ->
           caretPosition = if store.caretPosition is null then val.length else store.caretPosition
-          if caretPosition == 0
-            return val
 
           left = val.substr 0, caretPosition
           right = val.substr caretPosition
 
+          # check if the caret is in a suitable position for insertion of refs
+          leftMatch = /[+-\/:;.*(=^><!]([A-Za-z]?\d{0,2})$/.exec(left)
+          rightMatch = /^([A-Za-z]?\d{0,2})([+-\/:;.*)=^><!]|$)/.exec(right)
+          if not leftMatch or not rightMatch
+            return val
+
+          # the parts of cell matched at each side of the caret should form a
+          # perfect cell, otherwise they are not a cell and we can move on
+          if (leftMatch[1] or rightMatch[1]) and
+             (not /[A-Za-z]\d{1,2}/.exec leftMatch[1] + rightMatch[1])
+            return val
+
           # clean near expression values
-          left = left.replace /([+-/:;.*(=])[^+-/:;.*(=]*$/, '$1'
-          right = right.replace /^[^+-/:;.*)]*([+-/:;.*)]|$)/, '$1'
+          left = left.replace /([+-/:;.*(=^><!])[^+-/:;.*(=^><!]*$/, '$1'
+          right = right.replace /^[^+-/:;.*^><!)]*([+-/:;.*)^><!]|$)/, '$1'
 
           # set caret position to just after the addr
           store.caretPosition = (left + addr).length
@@ -250,9 +296,14 @@ store.registerCallback 'strap-mousedown', (coord) ->
     store.strapping = true
     store.changed()
 
-store.registerCallback 'cell-doubleClicked', (coord) ->
+store.registerCallback 'cell-doubleclicked', (coord) ->
   store.select coord
   store.edit coord
+
+  # if the cell is empty, enter volatileEdit mode
+  if not Mori.get_in store.cells, coord.concat 'raw'
+    store.volatileEdit = true
+
   store.changed()
 
 store.registerCallback 'down', (e) ->
@@ -297,100 +348,153 @@ store.registerCallback 'tab', (e) ->
     store.triggerCallback 'right', e
 
 store.registerCallback 'left', (e) ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     if store.selectedCoord[1] > 0
       store.select [store.selectedCoord[0], store.selectedCoord[1] - 1]
-      store.changed()
-  else
-    store.caretPosition = selix.getCaret(e.target).start
+    store.changed()
 
 store.registerCallback 'right', (e) ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     if store.selectedCoord[1] < (Mori.count(Mori.get(store.cells, 0)) - 1)
       store.select [store.selectedCoord[0], store.selectedCoord[1] + 1]
-      store.changed()
-  else
-    store.caretPosition = selix.getCaret(e.target).end
+    store.changed()
+
 
 store.registerCallback 'all-right', ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     store.select [store.selectedCoord[0], Mori.count(Mori.get(store.cells, 0)) - 1]
-    store.changed()
+  store.changed()
 
 store.registerCallback 'all-down', ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     store.select [Mori.count(store.cells) - 1, store.selectedCoord[1]]
-    store.changed()
+  store.changed()
 
 store.registerCallback 'all-up', ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     store.select [0, store.selectedCoord[1]]
-    store.changed()
+  store.changed()
 
 store.registerCallback 'all-left', ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     store.select [store.selectedCoord[0], 0]
-    store.changed()
+  store.changed()
 
 store.registerCallback 'select-down', (e) ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     e.preventDefault()
     edge = store.multi[1]
     if edge[0] < (Mori.count(store.cells) - 1)
       store.multi = [store.selectedCoord, [edge[0] + 1, edge[1]]]
-      store.changed()
+    store.changed()
 
 store.registerCallback 'select-up', (e) ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     e.preventDefault()
     edge = store.multi[1]
     if edge[0] > 0
       store.multi = [store.selectedCoord, [edge[0] - 1, edge[1]]]
-      store.changed()
+    store.changed()
 
 store.registerCallback 'select-left', (e) ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     e.preventDefault()
     edge = store.multi[1]
     if edge[1] > 0
       store.multi = [store.selectedCoord, [edge[0], edge[1] - 1]]
-      store.changed()
+    store.changed()
 
 store.registerCallback 'select-right', (e) ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     e.preventDefault()
     edge = store.multi[1]
     if edge[1] < (Mori.count(Mori.get(store.cells, 0)) - 1)
       store.multi = [store.selectedCoord, [edge[0], edge[1] + 1]]
-      store.changed()
+    store.changed()
 
 store.registerCallback 'select-all-right', (e) ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     e.preventDefault()
     edge = store.multi[1]
     store.multi = [store.selectedCoord, [edge[0], Mori.count(Mori.get(store.cells, 0)) - 1]]
-    store.changed()
+  store.changed()
 
 store.registerCallback 'select-all-down', (e) ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     e.preventDefault()
     edge = store.multi[1]
     store.multi = [store.selectedCoord, [Mori.count(store.cells) - 1, edge[1]]]
-    store.changed()
+  store.changed()
 
 store.registerCallback 'select-all-up', (e) ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     e.preventDefault()
     edge = store.multi[1]
     store.multi = [store.selectedCoord, [0, edge[1]]]
-    store.changed()
+  store.changed()
 
 store.registerCallback 'select-all-left', (e) ->
+  if store.volatileEdit
+    store.edit null
+    recalc()
+
   if not store.editingCoord
     e.preventDefault()
     edge = store.multi[1]
     store.multi = [store.selectedCoord, [edge[0], 0]]
-    store.changed()
+  store.changed()
 
 store.registerCallback 'del', ->
   if not store.editingCoord
@@ -425,6 +529,11 @@ store.registerCallback 'letter', (e) ->
     e.preventDefault()
     e.stopPropagation()
     store.edit store.selectedCoord
+
+    # because this editing mode always deletes the cell contents
+    # we always enter the volatileEdit mode
+    store.volatileEdit = true
+
     store.changed()
 
 store.registerCallback 'esc', ->

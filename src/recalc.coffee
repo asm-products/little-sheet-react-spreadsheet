@@ -40,8 +40,11 @@ getCalcResultAt = (addr) ->
     return getCalcResult raw
 
 getCalcResult = (raw) ->
-  if raw[0] == '='
-    return parser.parse raw.slice 1
+  if raw[0] == '=' and raw.length > 1
+    try
+      return parser.parse raw.slice 1
+    catch e
+      return parseStr raw.toString()
   else
     return parseStr raw.toString()
 

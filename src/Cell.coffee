@@ -15,7 +15,7 @@ Cell = React.createClass
       return true
 
   wasEditing: false
-  componentDidUpdate: ->
+  componentDidUpdate: (prevProps) ->
     if @refs.input
       node = @refs.input.getDOMNode()
       caret = if @props.caretPosition is null then node.value.length else @props.caretPosition
@@ -25,6 +25,9 @@ Cell = React.createClass
         @wasEditing = true
       else if node != document.activeElement
         node.focus()
+        node.setSelectionRange caret, caret
+      else if @props.caretPosition isnt null and
+              @props.caretPosition != prevProps.caretPosition
         node.setSelectionRange caret, caret
     if not @refs.input
       @wasEditing = false
@@ -37,7 +40,6 @@ Cell = React.createClass
         if mori.get(@props.cell, 'multi') then 'multi-selected' else ''
       }"
       onMouseUp: @handleMouseUp
-      onMouseMove: @handleMouseMove
       onMouseEnter: @handleMouseEnter
     ,
       (div {},
@@ -46,6 +48,8 @@ Cell = React.createClass
           className: 'mousetrap'
           onChange: @handleChange
           onClick: @handleClickInput
+          onDoubleClick: @handleDoubleClickInput
+          onSelect: @handleSelectText
           value: mori.get @props.cell, 'raw'
         ) else (span
           onClick: @handleClick
@@ -70,6 +74,12 @@ Cell = React.createClass
 
   handleClickInput: (e) ->
     dispatcher.handleCellInputClicked e
+
+  handleDoubleClickInput: (e) ->
+    dispatcher.handleCellInputDoubleClicked e
+
+  handleSelectText: (e) ->
+    dispatcher.handleSelectText e
 
   handleClick: (e) ->
     e.preventDefault()
@@ -98,11 +108,7 @@ Cell = React.createClass
     dispatcher.handleCellMouseDown [@props.rowKey, @props.key]
 
   handleMouseUp: (e) ->
-    e.preventDefault()
     dispatcher.handleCellMouseUp [@props.rowKey, @props.key]
-
-  handleMouseMove: (e) ->
-    e.preventDefault()
 
   handleMouseEnter: (e) ->
     e.preventDefault()

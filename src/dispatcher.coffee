@@ -12,7 +12,7 @@ class Dispatcher extends EventEmitter
     @emit 'replace-cells', cellsArray
 
   handleCellDoubleClicked: (coord) ->
-    @emit 'cell-doubleClicked', coord # coord should be an array like [rowNumber, colNumber]
+    @emit 'cell-doubleclicked', coord # coord should be an array like [rowNumber, colNumber]
 
   handleCellClicked: (coord) ->
     @emit 'cell-clicked', coord
@@ -35,6 +35,12 @@ class Dispatcher extends EventEmitter
   handleCellInputClicked: (e) ->
     @emit 'input-clicked', e.target
 
+  handleCellInputDoubleClicked: (e) ->
+    @emit 'input-doubleclicked', e.target
+
+  handleSelectText: (e) ->
+    @emit 'input-selecttext', e.target
+
   handleSheetClickedOut: (e) ->
     @emit 'sheet-clicked-out', e
 
@@ -50,6 +56,8 @@ class Dispatcher extends EventEmitter
       'all-up': ['command+up', 'ctrl+up']
       'all-left': ['command+left', 'ctrl+left']
       'all-right': ['command+right', 'ctrl+right']
+      'left-keyup': 'left'
+      'right-keyup': 'right'
       'del': 'del'
       'undo': 'ctrl+z'
       'redo': 'ctrl+y'
