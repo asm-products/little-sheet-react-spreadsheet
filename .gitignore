@@ -8,3 +8,4 @@ tests/bundle.js
 *.swp
 node_modules
 src/formula-parser.js
+src/formula-parser-pre.js
