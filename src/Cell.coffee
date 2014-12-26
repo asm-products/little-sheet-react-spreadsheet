@@ -17,22 +17,13 @@ Cell = React.createClass
   wasEditing: false
   componentDidUpdate: (prevProps) ->
     if @refs.input
-      node = @refs.input.getDOMNode()
-      caret = if @props.caretPosition is null then node.value.length else @props.caretPosition
-      if not @wasEditing
-        node.focus()
-        node.setSelectionRange caret, caret
-        @wasEditing = true
-      else if node != document.activeElement
-        node.focus()
-        node.setSelectionRange caret, caret
-      else if @props.caretPosition isnt null and
-              @props.caretPosition != prevProps.caretPosition
-        node.setSelectionRange caret, caret
-    if not @refs.input
-      @wasEditing = false
 
   render: ->
+    if mori.get @props.cell, 'editing'
+      shownValue = mori.get @props.cell, 'raw'
+    else
+      shownValue = mori.get @props.cell 'calc'
+
     (td
       className: "cell #{
         if mori.get(@props.cell, 'selected') then 'selected' else ''
@@ -43,24 +34,14 @@ Cell = React.createClass
       onMouseEnter: @handleMouseEnter
     ,
       (div {},
-        if mori.get @props.cell, 'editing' then (input
-          ref: 'input'
-          className: 'mousetrap'
-          onChange: @handleChange
-          onClick: @handleClickInput
-          onDoubleClick: @handleDoubleClickInput
-          onSelect: @handleSelectText
-          value: mori.get @props.cell, 'raw'
-        ) else (span
+        (span
           onClick: @handleClick
           onDoubleClick: @handleDoubleClick
           onTouchStart: @handleRouchStart
           onTouchEnd: @handleRouchEnd
           onTouchCancel: @handleRouchEnd
           onMouseDown: @handleMouseDown
-        ,
-          mori.get @props.cell, 'calc'
-        )
+        , shownValue)
       )
       (div
         className: 'strap'
@@ -68,18 +49,8 @@ Cell = React.createClass
       ) if mori.get @props.cell, 'last-multi'
     )
 
-  handleChange: (e) ->
-    e.preventDefault()
-    dispatcher.handleCellEdited e.target.value
-
   handleClickInput: (e) ->
     dispatcher.handleCellInputClicked e
-
-  handleDoubleClickInput: (e) ->
-    dispatcher.handleCellInputDoubleClicked e
-
-  handleSelectText: (e) ->
-    dispatcher.handleSelectText e
 
   handleClick: (e) ->
     e.preventDefault()

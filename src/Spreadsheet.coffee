@@ -56,9 +56,12 @@ Spreadsheet = React.createClass
       (Clipboard
         value: @state.clipboard
       )
+      (InputField
+        caretPosition: @state.caretPosition
+        cells: @state.cells
+      )
       (Cells
         cells: @state.cells
-        caretPosition: @state.caretPosition
       )
     )
 
@@ -126,7 +129,6 @@ Cells = React.createClass
             rowKey: i
             key: j
             cell: mori.get_in @props.cells, [i, j]
-            caretPosition: @props.caretPosition
           ) for j in [0..(mori.count(mori.get(@props.cells, 0))-1)]
         ) for i in [0..(mori.count(@props.cells)-1)]
       )
