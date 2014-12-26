@@ -3,6 +3,11 @@
   "version": "0.2.0",
   "description": "A pluggable spreadsheet component.",
   "main": "lib/Spreadsheet.js",
+  "bugs": "https://github.com/asm-products/sheetsh-react-spreadsheet/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/asm-products/sheetsh-react-spreadsheet"
+  },
   "dependencies": {
     "formulajs": "1.0.2",
     "mousetrap": "*",
@@ -37,5 +42,10 @@
     "spreadsheet"
   ],
   "author": "Giovanni T. Parra",
-  "license": "MIT"
+  "licenses": [
+    {
+      "type": "AGPL",
+      "url": "https://github.com/asm-products/sheetsh-react-spreadsheet/blob/master/LICENSE"
+    }
+  ]
 }
