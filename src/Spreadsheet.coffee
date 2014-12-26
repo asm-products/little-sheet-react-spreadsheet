@@ -9,7 +9,7 @@ dispatcher = require './dispatcher'
 cellStore = require './cells-store'
 
 Spreadsheet = React.createClass
-  displayName: 'ReactMicroSpreadsheet'
+  displayName: 'ReactSpreadsheet'
   getInitialState: ->
     cells: cellStore.getCells()
 
@@ -51,7 +51,7 @@ Spreadsheet = React.createClass
 
   render: ->
     (div
-      className: 'microspreadsheet'
+      className: 'spreadsheet'
     ,
       (Clipboard
         value: @state.clipboard

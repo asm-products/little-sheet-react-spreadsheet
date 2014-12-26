@@ -30,12 +30,12 @@ describe 'basic', ->
     after utils.reset
 
     it 'renders the table', (done) ->
-      expect($('table.microspreadsheet')).to.exist
+      expect($('table.spreadsheet')).to.exist
       done()
 
     it 'renders the rows and cells at the right places', (done) ->
       cells = []
-      for row in $('.microspreadsheet tr')
+      for row in $('.spreadsheet tr')
         rowArray = []
         for cell in $(row).find('td')
           rowArray.push $(cell).text()
@@ -57,12 +57,12 @@ describe 'basic', ->
       React.renderComponent Spreadsheet(cells: cells), utils.testNode(), done
 
     it 'renders the table', (done) ->
-      expect($('table.microspreadsheet')).to.exist
+      expect($('table.spreadsheet')).to.exist
       done()
 
     it 'renders the rows and cells with the right values', (done) ->
       cells = []
-      for row in $('.microspreadsheet tr')
+      for row in $('.spreadsheet tr')
         rowArray = []
         for cell in $(row).find('td')
           rowArray.push $(cell).text()
@@ -94,24 +94,24 @@ describe 'basic', ->
       span = testUtils.findRenderedDOMComponentWithTag(secondCell, 'span')
       testUtils.Simulate.doubleClick(span)
 
-      expect($('.microspreadsheet .cell input')[0]).to.exist
-      expect($('.microspreadsheet .cell input').val()).to.eql '123'
+      expect($('.spreadsheet .cell input')[0]).to.exist
+      expect($('.spreadsheet .cell input').val()).to.eql '123'
       done()
 
     it 'changes its value', (done) ->
       input = testUtils.findRenderedDOMComponentWithTag(secondCell, 'input')
         
       testUtils.Simulate.change(input, {target: {value: '16'}})
-      expect($('.microspreadsheet .cell input').val()).to.eql '16'
+      expect($('.spreadsheet .cell input').val()).to.eql '16'
       done()
 
     it 'click at other cell and the table recalculates', (done) ->
-      $('.microspreadsheet .cell span').eq(3).click()
+      $('.spreadsheet .cell span').eq(3).click()
 
-      expect($('.microspreadsheet .cell input').length).to.eql 0
-      expect($('.microspreadsheet .cell').eq(1).text()).to.eql '16'
-      expect($('.microspreadsheet .cell').eq(4).text()).to.eql '51'
-      expect($('.microspreadsheet .cell').eq(5).text()).to.eql '67'
+      expect($('.spreadsheet .cell input').length).to.eql 0
+      expect($('.spreadsheet .cell').eq(1).text()).to.eql '16'
+      expect($('.spreadsheet .cell').eq(4).text()).to.eql '51'
+      expect($('.spreadsheet .cell').eq(5).text()).to.eql '67'
       done()
 
   describe 'change it from outside', ->
@@ -128,7 +128,7 @@ describe 'basic', ->
 
     it 'renders the rows and cells with the right values', (done) ->
       cells = []
-      for row in $('.microspreadsheet tr')
+      for row in $('.spreadsheet tr')
         rowArray = []
         for cell in $(row).find('td')
           rowArray.push $(cell).text()
@@ -151,7 +151,7 @@ describe 'basic', ->
       ]
       sheet.setProps cells: cells
       cells = []
-      for row in $('.microspreadsheet tr')
+      for row in $('.spreadsheet tr')
         rowArray = []
         for cell in $(row).find('td')
           rowArray.push $(cell).text()
@@ -187,30 +187,30 @@ describe 'basic', ->
     it 'adds a "="', (done) ->
       input = testUtils.findRenderedDOMComponentWithTag(secondCell, 'input')
       testUtils.Simulate.change(input, {target: {value: '='}})
-      expect($('.microspreadsheet .cell input').val()).to.eql '='
+      expect($('.spreadsheet .cell input').val()).to.eql '='
       done()
 
     it 'clicks at other cell and add its addr to the input', (done) ->
       fourthCell = testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[3]
       span = testUtils.findRenderedDOMComponentWithTag(fourthCell, 'span')
       testUtils.Simulate.click(span)
-      expect($('.microspreadsheet .cell input').val()).to.eql '=B2'
+      expect($('.spreadsheet .cell input').val()).to.eql '=B2'
       done()
 
     it 'clicks at another cell and replace the previous one', (done) ->
       thirdCell = testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[2]
       span = testUtils.findRenderedDOMComponentWithTag(thirdCell, 'span')
       testUtils.Simulate.click(span)
-      expect($('.microspreadsheet .cell input').val()).to.eql '=A2'
+      expect($('.spreadsheet .cell input').val()).to.eql '=A2'
       done()
 
     it 'recalculates when enter is pressed', (done) ->
       KeyEvent.simulate(0, 13)
 
-      expect($('.microspreadsheet .cell input').length).to.eql 0
-      expect($('.microspreadsheet .cell').eq(1).text()).to.eql '7'
-      expect($('.microspreadsheet .cell').eq(2).text()).to.eql '7'
-      expect($('.microspreadsheet .cell').eq(3).text()).to.eql '9'
+      expect($('.spreadsheet .cell input').length).to.eql 0
+      expect($('.spreadsheet .cell').eq(1).text()).to.eql '7'
+      expect($('.spreadsheet .cell').eq(2).text()).to.eql '7'
+      expect($('.spreadsheet .cell').eq(3).text()).to.eql '9'
       done()
 
   describe 'movement and keyboard shortcuts', ->
@@ -223,40 +223,40 @@ describe 'basic', ->
     after utils.reset
 
     it 'starts at the first cell', (done) ->
-      expect($('.microspreadsheet .cell').eq(0).hasClass('selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(0).hasClass('selected')).to.eql true
       done()
 
     it 'goes right', (done) ->
       KeyEvent.simulate(0, 39)
-      expect($('.microspreadsheet .cell').eq(1).hasClass('selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(1).hasClass('selected')).to.eql true
       done()
 
     it 'deletes the content inside', (done) ->
       KeyEvent.simulate(0, 46)
-      expect($('.microspreadsheet .cell span').eq(1).text()).to.eql ''
+      expect($('.spreadsheet .cell span').eq(1).text()).to.eql ''
       done()
 
     it 'does not go up', (done) ->
       KeyEvent.simulate(0, 38)
-      expect($('.microspreadsheet .cell').eq(1).hasClass('selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(1).hasClass('selected')).to.eql true
       done()
       
     it 'goes down', (done) ->
       KeyEvent.simulate(0, 40)
-      expect($('.microspreadsheet .cell').eq(3).hasClass('selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(3).hasClass('selected')).to.eql true
       done()
 
     it 'starts editing with a keypress (also replacing the text field with the corresponding char)', (done) ->
       KeyEvent.simulate(80, 80)
 
-      expect($('.microspreadsheet .cell').eq(3).hasClass('selected')).to.eql true
-      expect($('.microspreadsheet .cell input')).to.have.length 1
-      expect($('.microspreadsheet .cell input').val()).to.eql 'P'
+      expect($('.spreadsheet .cell').eq(3).hasClass('selected')).to.eql true
+      expect($('.spreadsheet .cell input')).to.have.length 1
+      expect($('.spreadsheet .cell input').val()).to.eql 'P'
       done()
 
     it 'cancels the edit', (done) ->
       KeyEvent.simulate(0, 27)
-      expect($('.microspreadsheet .cell').eq(3).text()).to.eql '9'
+      expect($('.spreadsheet .cell').eq(3).text()).to.eql '9'
       done()
 
   describe 'undo, redo', ->
@@ -271,26 +271,26 @@ describe 'basic', ->
     it 'starts editing with a keypress (also replacing the text field with the corresponding char)', (done) ->
       KeyEvent.simulate(81, 81)
 
-      expect($('.microspreadsheet .cell input').val()).to.eql 'Q'
+      expect($('.spreadsheet .cell input').val()).to.eql 'Q'
       done()
 
     it 'saves the edit', (done) ->
       KeyEvent.simulate(0, 13)
 
-      expect($('.microspreadsheet .cell span').length).to.eql 4
-      expect($('.microspreadsheet .cell span').eq(0).text()).to.eql 'Q'
+      expect($('.spreadsheet .cell span').length).to.eql 4
+      expect($('.spreadsheet .cell span').eq(0).text()).to.eql 'Q'
       done()
 
     it 'undoes the edit', (done) ->
       KeyEvent.simulate(90, 90, ['ctrl'])
     
-      expect($('.microspreadsheet .cell span').eq(0).text()).to.eql 'a'
+      expect($('.spreadsheet .cell span').eq(0).text()).to.eql 'a'
       done()
 
     it 'redoes the edit', (done) ->
       KeyEvent.simulate(89, 89, ['ctrl'])
 
-      expect($('.microspreadsheet .cell span').eq(0).text()).to.eql 'Q'
+      expect($('.spreadsheet .cell span').eq(0).text()).to.eql 'Q'
       done()
 
   describe 'multi select', ->
@@ -309,50 +309,50 @@ describe 'basic', ->
       first = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[0], 'span')
       testUtils.Simulate.mouseDown(first)
 
-      expect($('.microspreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql false
-      expect($('.microspreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql false
-      expect($('.microspreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql false
-      expect($('.microspreadsheet .cell').eq(3).hasClass('multi-selected')).to.eql false
+      expect($('.spreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql false
+      expect($('.spreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql false
+      expect($('.spreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql false
+      expect($('.spreadsheet .cell').eq(3).hasClass('multi-selected')).to.eql false
       done()
 
     it 'moves transversally', (done) ->
       first = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[0], 'span')
       third = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[2], 'span')
 
-      testUtils.SimulateNative.mouseOut(first, {relatedTarget: $('.microspreadsheet .cell').eq(2)[0]})
-      testUtils.SimulateNative.mouseOver(third, {relatedTarget: $('.microspreadsheet .cell').eq(0)[0]})
+      testUtils.SimulateNative.mouseOut(first, {relatedTarget: $('.spreadsheet .cell').eq(2)[0]})
+      testUtils.SimulateNative.mouseOver(third, {relatedTarget: $('.spreadsheet .cell').eq(0)[0]})
 
-      expect($('.microspreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql true
-      expect($('.microspreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql true
-      expect($('.microspreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql true
-      expect($('.microspreadsheet .cell').eq(3).hasClass('multi-selected')).to.eql false
+      expect($('.spreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(3).hasClass('multi-selected')).to.eql false
       done()
 
     it 'moves back and the selection adjusts', (done) ->
       third = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[2], 'span')
       second = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[1], 'span')
 
-      testUtils.SimulateNative.mouseOut(third, {relatedTarget: $('.microspreadsheet .cell').eq(1)[0]})
-      testUtils.SimulateNative.mouseOver(second, {relatedTarget: $('.microspreadsheet .cell').eq(2)[0]})
+      testUtils.SimulateNative.mouseOut(third, {relatedTarget: $('.spreadsheet .cell').eq(1)[0]})
+      testUtils.SimulateNative.mouseOver(second, {relatedTarget: $('.spreadsheet .cell').eq(2)[0]})
 
-      expect($('.microspreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql true
-      expect($('.microspreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql true
-      expect($('.microspreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql false
+      expect($('.spreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql false
       done()
 
     it 'stops selecting and the selection continues', (done) ->
       second = testUtils.findRenderedDOMComponentWithTag(testUtils.scryRenderedDOMComponentsWithClass(sheet, 'cell')[1], 'span')
       testUtils.Simulate.mouseUp(second)
 
-      expect($('.microspreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql true
-      expect($('.microspreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql true
-      expect($('.microspreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql false
+      expect($('.spreadsheet .cell').eq(0).hasClass('multi-selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(1).hasClass('multi-selected')).to.eql true
+      expect($('.spreadsheet .cell').eq(2).hasClass('multi-selected')).to.eql false
       done()
 
     it 'deletes everything under the selection', (done) ->
       KeyEvent.simulate(0, 46)
 
-      expect($('.microspreadsheet .cell').eq(0).text()).to.eql ''
-      expect($('.microspreadsheet .cell').eq(1).text()).to.eql ''
-      expect($('.microspreadsheet .cell').eq(2).text()).to.eql 'a'
+      expect($('.spreadsheet .cell').eq(0).text()).to.eql ''
+      expect($('.spreadsheet .cell').eq(1).text()).to.eql ''
+      expect($('.spreadsheet .cell').eq(2).text()).to.eql 'a'
       done()

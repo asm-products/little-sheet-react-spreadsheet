@@ -6,7 +6,7 @@ mori = require 'mori'
 dispatcher = require './dispatcher'
 
 Cell = React.createClass
-  displayName: 'ReactMicroSpreadsheetCell'
+  displayName: 'ReactSpreadsheetCell'
 
   shouldComponentUpdate: (nextProps) ->
     if mori.equals(@props.cell, nextProps.cell)
