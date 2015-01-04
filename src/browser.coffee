@@ -1,5 +1,5 @@
-React = require 'react'
-Spreadsheet = require './Spreadsheet'
+hg = require 'mercury'
 
-module.exports = (opts, target) ->
-  React.renderComponent Spreadsheet(opts), target
+module.exports = (cells) ->
+  Spreadsheet = require './spreadsheet'
+  hg.app document.body, Spreadsheet(cells), Spreadsheet.render

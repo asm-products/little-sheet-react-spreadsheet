@@ -1,5 +1,5 @@
 {
-  "name": "react-spreadsheet",
+  "name": "sheetsh-spreadsheet",
   "version": "0.2.1",
   "description": "A pluggable spreadsheet component.",
   "main": "lib/Spreadsheet.js",
@@ -11,10 +11,15 @@
   "dependencies": {
     "formulajs": "1.0.2",
     "mousetrap": "*",
-    "mori": ">=0.2.x",
     "wolfy-eventemitter": "^0.1.0",
     "selix": "^1.1.0",
-    "react": "<=0.11.*"
+    "observ-grid": "^2.8.1",
+    "virtual-elements": "0.0.1",
+    "mercury": "^12.0.0",
+    "flatten": "0.0.1",
+    "geval": "^2.1.1",
+    "xtend": "^4.0.0",
+    "weakmap-shim": "^1.1.0"
   },
   "devDependencies": {
     "coffee-script": "^1.8.0",
@@ -30,15 +35,14 @@
   "scripts": {
     "prepublish": "npm run jison && npm run compile-css && ./node_modules/.bin/coffee -c --bare --output lib/ src/ && cp ./src/*.js ./lib/",
     "jison": "jison ./src/formula-parser.jison -o ./src/formula-parser-pre.js && cat ./src/formula-parser-pre.js ./src/formula-parser-includes.js > ./src/formula-parser.js",
-    "compile-css": "./node_modules/.bin/lessc --clean-css style.less react-spreadsheet.css",
+    "compile-css": "./node_modules/.bin/lessc --clean-css style.less sheetsh-spreadsheet.css",
     "compile": "browserify -t coffeeify --extension=\".coffee\" --standalone Spreadsheet ./src/browser.coffee > ./dist/spreadsheet.js",
     "host": "npm run compile-css && npm run jison && npm run compile && python -m SimpleHTTPServer 3000",
     "test-phantom": "npm run jison && browserify -t coffeeify --extension=\".coffee\" ./tests/tests.coffee > ./tests/bundle.js && mocha-phantomjs ./tests/index.html",
     "test-browser": "npm run jison && browserify -t coffeeify --extension=\".coffee\" ./tests/tests.coffee > ./tests/bundle.js && python -m SimpleHTTPServer 4000",
     "test": "npm run test-phantom"
-},
+  },
   "keywords": [
-    "react-component",
     "spreadsheet"
   ],
   "author": "Giovanni T. Parra",

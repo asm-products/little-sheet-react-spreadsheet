@@ -1,98 +1,105 @@
-Store = require './base-store'
-Mori = require 'mori'
-utils = require './utils'
-selix = require 'selix'
+  replaceCells: (cellsArray) ->
+    @emit 'replace-cells', cellsArray
 
-class RawStore extends Store
-  # data
-  cells: Mori.js_to_clj [
-    [
-      {raw: '', calc: ''}
-      {raw: '', calc: ''}
-      {raw: '', calc: ''}
-    ]
-    [
-      {raw: '', calc: ''}
-      {raw: '', calc: ''}
-      {raw: '', calc: ''}
-    ]
-    [
-      {raw: '', calc: ''}
-      {raw: '', calc: ''}
-      {raw: '', calc: ''}
-    ]
-  ]
-  selectedCoord: [0, 0]
-  multi: [[0, 0], [0, 0]]
-  selectingMulti: false
-  strapping: false
-  strapVector: [null, null, null]
-  editingCoord: null
-  volatileEdit: false # volatileEdit is a mode of edition in which it is easy to stop editing,
-                      # by pressing left or right, for example.
-                      # useful when we are quickly adding a lot of records to a sheet
-  refEdit: false
-  caretPosition: null
+  handleCellDoubleClicked: (coord) ->
+    @emit 'cell-doubleclicked', coord # coord should be an array like [rowNumber, colNumber]
 
-  select: (coord) ->
-    @selectedCoord = coord
-    @multi = [coord, coord]
-  edit: (coord) ->
-    @editingCoord = coord
-    @selectingMulti = false
-    @caretPosition = null
-    @volatileEdit = false
-    @refEdit = false
+  handleCellClicked: (coord) ->
+    @emit 'cell-clicked', coord
 
-  getCells: ->
-    cells = Mori.assoc_in @cells, @selectedCoord.concat('selected'), true
+  handleCellMouseDown: (coord) ->
+    @emit 'cell-mousedown', coord
 
-    if @editingCoord
-      cells = Mori.assoc_in cells, @editingCoord.concat('editing'), true
+  handleMouseDownStrap: (coord) ->
+    @emit 'strap-mousedown', coord
 
-    if @strapVector[1] != null
-      # this only works if the first is the first and the second is the second
-      highlight = [utils.firstCellFromMulti(@multi), utils.lastCellFromMulti(@multi)]
-      # plus, we gain a free cloning of @multi into something we can modify with
+  handleCellMouseUp: (coord) ->
+    @emit 'cell-mouseup', coord
 
-      # heavy math:
-      #         left/top or right/bottom  vertical or horizontal  
-      highlight[    @strapVector[1]     ][    @strapVector[0]   ] += @strapVector[2]
+  handleCellMouseEnter: (coord) ->
+    @emit 'cell-mouseenter', coord
 
-    else
-      highlight = @multi
+  handleCellEdited: (value) ->
+    @emit 'new-cell-value', value
 
-    for i in [highlight[0][0]..highlight[1][0]]
-      for j in [highlight[0][1]..highlight[1][1]]
-        cells = Mori.assoc_in cells, [i, j, 'multi'], true
+  handleCellInputClicked: (e) ->
+    @emit 'input-clicked', e.target
 
-    cells = Mori.assoc_in cells, utils.lastCellFromMulti(store.multi).concat('last-multi'), true
+  handleCellInputDoubleClicked: (e) ->
+    @emit 'input-doubleclicked', e.target
 
-    return cells
+  handleSelectText: (e) ->
+    @emit 'input-selecttext', e.target
 
-  undoStates: Mori.list()
-  redoStates: Mori.list()
-  canUndo: false
-  canRedo: false
-  redo: ->
-    if store.canRedo
-      store.undoStates = Mori.conj store.undoStates, Mori.first store.redoStates
-      store.cells = Mori.first store.redoStates
-      store.redoStates = Mori.drop 1, store.redoStates
-      store.canRedo = not Mori.is_empty store.redoStates
-      store.canUndo = true
-  undo: ->
-    if store.canUndo
-      store.redoStates = Mori.conj store.redoStates, Mori.first this.undoStates
-      store.undoStates = Mori.drop 1, store.undoStates
-      store.cells = Mori.first store.undoStates
-      store.canUndo = not Mori.is_empty store.undoStates
-      store.canRedo = true
+  handleSheetClickedOut: (e) ->
+    @emit 'sheet-clicked-out', e
 
-  clipboard: false
-  rawClipboard: {}
+  handleSheetMouseUpOut: (e) ->
+    @emit 'sheet-mouseup-out', e
 
-store = new RawStore
+  initKeyboardShortcuts: ->
+    keyup =
+      'all-down': ['command+down', 'ctrl+down']
+      'all-up': ['command+up', 'ctrl+up']
+      'all-left': ['command+left', 'ctrl+left']
+      'all-right': ['command+right', 'ctrl+right']
+      'left-keyup': 'left'
+      'right-keyup': 'right'
+      'del': 'del'
+      'undo': 'ctrl+z'
+      'redo': 'ctrl+y'
+      'esc': 'esc'
+      'after-copypaste': ['ctrl', 'command'],
+
+    for eventChannel, shortcut of keyup
+      (=>
+        channel = eventChannel
+        Mousetrap.bind shortcut, (e, combo) =>
+          @emit channel, e, combo
+        , 'keyup'
+      )()
+
+    keydown =
+      'down': ['down', 'enter']
+      'up': 'up'
+      'left': 'left'
+      'right': 'right'
+      'tab': 'tab'
+      'select-down': 'shift+down'
+      'select-up': 'shift+up'
+      'select-left': 'shift+left'
+      'select-right': 'shift+right'
+      'select-all-down': ['ctrl+shift+down', 'command+shift+down']
+      'select-all-up': ['ctrl+shift+up', 'command+shift+up']
+      'select-all-left': ['ctrl+shift+left', 'command+shift+left']
+      'select-all-right': ['ctrl+shift+right', 'command+shift+right']
+      'before-copypaste': ['ctrl', 'command']
+      'cutcopy': ['ctrl+c', 'command+c', 'ctrl+x', 'command+x']
+
+    for eventChannel, shortcut of keydown
+      (=>
+        channel = eventChannel
+        Mousetrap.bind shortcut, (e, combo) =>
+          @emit channel, e, combo
+        , 'keydown'
+      )()
+
+    keypress =
+      'letter': ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'x', 'w', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '=', '.', ',', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'X', 'W', 'Y', 'Z']
+
+    for eventChannel, shortcut of keypress
+      (=>
+        channel = eventChannel
+        Mousetrap.bind shortcut, (e, combo) =>
+          @emit channel, e, combo
+        , 'keypress'
+      )()
+
+dispatcher = new Dispatcher
+if typeof window isnt 'undefined'
+  dispatcher.initKeyboardShortcuts()
+
+module.exports = dispatcher
 
 store.registerCallback 'replace-cells', (cellsArray) ->
   newCells = Mori.js_to_clj(
@@ -605,66 +612,6 @@ store.registerCallback 'cutcopy', (e) ->
     # then save it to out internal clipboard
     store.rawClipboard = {}
     store.rawClipboard[selix.getText clipboard] = copiedRows
-
-store.registerCallback 'clipboardchanged', (what) ->
-  # a cut event, ctrl+x, leaving the clipboard empty
-  if what is ''
-    for i in [store.multi[0][0]..store.multi[1][0]]
-      for j in [store.multi[0][1]..store.multi[1][1]]
-        store.cells = Mori.assoc_in(
-          store.cells
-          [i, j, 'raw']
-          ''
-        )
-
-  # a paste event, ctrl+v, putting data at the clipboard
-  else
-    # when getting a paste, we need to check if the pasted cells
-    # were copied from this same sheet, in this case we will paste
-    # their raw values, instead of the values in the real user
-    # clipboard (which are the calc values).
-    # to check this, we see if the contents of the user's
-    # real clipboard are the same that were copied in the last
-    # captured 'copy' event.
-
-    if what of store.rawClipboard
-        # yes, they are.
-        # let's replace the pasted content with the corresponding
-        # cell raw values that we had previously captured
-        pastedRows = store.rawClipboard[what]
-
-    else
-        # no, they are not, they were copied from somewhere else,
-        # let's just paste normally
-
-        # before, we create a two dimension array from the pasted string
-        pastedRows = (cell for cell in row.split('\t') for row in what.split('\n'))
-
-    # pasting
-    firstSelected = utils.firstCellFromMulti store.multi
-    for i in [0..pastedRows.length-1]
-      pastedRow = pastedRows[i]
-      qi = i + firstSelected[0]
-      if qi >= Mori.count store.cells
-        # this condition checks for the end of the rows,
-        # so we don't end adding any data below the existent
-        # rows.
-        continue
-
-      for j in [0..pastedRow.length-1]
-        pastedCell = pastedRow[j]
-        qj = j + firstSelected[1]
-        if qj >= Mori.count Mori.get store.cells, 0
-          # this condition checks for the end of the cols,
-          continue
-        store.cells = Mori.assoc_in(
-          store.cells
-          [qi, qj, 'raw']
-          pastedCell
-        )
-
-  recalc()
-  store.changed()
 
 store.registerCallback 'after-copypaste', ->
   store.clipboard = null
