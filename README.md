@@ -1,6 +1,6 @@
 # Sheetsh
 
-<a href="https://assembly.com/sheetsh/bounties"><img src="https://asm-badger.herokuapp.com/sheetsh/badges/tasks.svg" height="24px" alt="Open Tasks" /></a>
+<a href="https://assembly.com/little-sheet/bounties"><img src="https://asm-badger.herokuapp.com/little-sheet/badges/tasks.svg" height="24px" alt="Open Tasks" /></a>
 
 ## A small sheet you can share
 
