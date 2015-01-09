@@ -4,11 +4,11 @@
 
 ## A small sheet you can share
 
-This is a product being built by the Assembly community. You can help push this idea forward by visiting [https://assembly.com/sheetsh](https://assembly.com/sheetsh).
+This is a product being built by the Assembly community. You can help push this idea forward by visiting [https://assembly.com/little-sheet](https://assembly.com/little-sheet).
 
 ### Running this locally
 
-Please refer to the instructions at [the main repository for this product](https://github.com/asm-products/sheetsh).
+Please refer to the instructions at [the main repository for this product](https://github.com/asm-products/little-sheet).
 
 ### How Assembly Works
 
