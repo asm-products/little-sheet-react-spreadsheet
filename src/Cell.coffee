@@ -83,11 +83,11 @@ Cell = React.createClass
 
   handleClick: (e) ->
     e.preventDefault()
-    dispatcher.handleCellClicked [@props.rowKey, @props.key] # this is the coord [i, j]
+    dispatcher.handleCellClicked [@props.rowKey, @props.colKey] # this is the coord [i, j]
 
   handleDoubleClick: (e) ->
     e.preventDefault()
-    dispatcher.handleCellDoubleClicked [@props.rowKey, @props.key]
+    dispatcher.handleCellDoubleClicked [@props.rowKey, @props.colKey]
 
   handleTouchStart: (e) ->
     @timer = setTimeout @handleLongTouch, 700
@@ -96,22 +96,22 @@ Cell = React.createClass
     clearTimeout @timer
 
   handleLongTouch: ->
-    dispatcher.handleCellDoubleClicked [@props.rowKey, @props.key]
+    dispatcher.handleCellDoubleClicked [@props.rowKey, @props.colKey]
 
   handleMouseDownStrap: (e) ->
     e.stopPropagation()
     e.preventDefault()
-    dispatcher.handleMouseDownStrap [@props.rowKey, @props.key]
+    dispatcher.handleMouseDownStrap [@props.rowKey, @props.colKey]
 
   handleMouseDown: (e) ->
     e.preventDefault()
-    dispatcher.handleCellMouseDown [@props.rowKey, @props.key]
+    dispatcher.handleCellMouseDown [@props.rowKey, @props.colKey]
 
   handleMouseUp: (e) ->
-    dispatcher.handleCellMouseUp [@props.rowKey, @props.key]
+    dispatcher.handleCellMouseUp [@props.rowKey, @props.colKey]
 
   handleMouseEnter: (e) ->
     e.preventDefault()
-    dispatcher.handleCellMouseEnter [@props.rowKey, @props.key]
+    dispatcher.handleCellMouseEnter [@props.rowKey, @props.colKey]
 
 module.exports = Cell

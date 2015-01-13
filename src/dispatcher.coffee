@@ -1,5 +1,4 @@
-if typeof window isnt 'undefined'
-  Mousetrap = require 'mousetrap'
+require 'mousetrap'
 
 EventEmitter = require 'wolfy-eventemitter'
 if EventEmitter.EventEmitter

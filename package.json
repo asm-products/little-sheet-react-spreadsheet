@@ -1,6 +1,6 @@
 {
   "name": "react-spreadsheet",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "A pluggable spreadsheet component.",
   "main": "lib/Spreadsheet.js",
   "bugs": "https://github.com/asm-products/sheetsh-react-spreadsheet/issues",
@@ -14,7 +14,7 @@
     "mori": ">=0.2.x",
     "wolfy-eventemitter": "^0.1.0",
     "selix": "^1.1.0",
-    "react": "<=0.11.*"
+    "react": "^0.12.2"
   },
   "devDependencies": {
     "coffee-script": "^1.8.0",
@@ -36,7 +36,7 @@
     "test-phantom": "npm run jison && browserify -t coffeeify --extension=\".coffee\" ./tests/tests.coffee > ./tests/bundle.js && mocha-phantomjs ./tests/index.html",
     "test-browser": "npm run jison && browserify -t coffeeify --extension=\".coffee\" ./tests/tests.coffee > ./tests/bundle.js && python -m SimpleHTTPServer 4000",
     "test": "npm run test-phantom"
-},
+  },
   "keywords": [
     "react-component",
     "spreadsheet"

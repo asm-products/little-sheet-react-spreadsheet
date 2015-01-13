@@ -2,7 +2,7 @@ React = require 'react'
 mori = require 'mori'
 
 {table, tbody, tr, td, div, span, input, textarea} = React.DOM
-Cell = require './Cell'
+Cell = React.createFactory require './Cell'
 
 utils = require './utils'
 dispatcher = require './dispatcher'
@@ -76,7 +76,7 @@ Spreadsheet = React.createClass
         return
     dispatcher.handleSheetMouseUpOut e
 
-Clipboard = React.createClass
+Clipboard = React.createFactory React.createClass
   shouldComponentUpdate: (nextProps) ->
     if nextProps.value != @props.value
       return true
@@ -100,7 +100,7 @@ Clipboard = React.createClass
 
   handleChange: (e) -> dispatcher.handleClipboardChanged e.target.value
 
-Cells = React.createClass
+Cells = React.createFactory React.createClass
   shouldComponentUpdate: (nextProps) ->
     unless mori.equals nextProps.cells, @props.cells or
            mori.equals nextProps.caretPosition, @props.caretPosition
@@ -124,6 +124,7 @@ Cells = React.createClass
           (td {className: 'label'}, i + 1)
           (Cell
             rowKey: i
+            colKey: j
             key: j
             cell: mori.get_in @props.cells, [i, j]
             caretPosition: @props.caretPosition
